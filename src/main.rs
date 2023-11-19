@@ -15,7 +15,6 @@ use ratatui::{
     Terminal,
 };
 
-use std::sync::mpsc::sync_channel;
 use std::{error::Error, io, thread, time};
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -46,10 +45,20 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
     // create channels
     // Draw loop
     loop {
-        //render terminal
+        // render terminal
         terminal.draw(|f| ui::ui(f, app))?;
-        thread::sleep(time::Duration::from_millis(5000));
-        break;
+        //thread::sleep(time::Duration::from_millis(5000));
+        
+        // update app state (waits for keypress) 
+        if let Err(_) = app.update_state() {
+            break;
+        } 
+
+        // If keypress changed it to quit then break
+        match app.get_mode() {
+            app::Mode::Quit => break,
+            _ => {}
+        }
     }
 
     Ok(true)
