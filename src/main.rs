@@ -48,11 +48,11 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<
         // render terminal
         terminal.draw(|f| ui::ui(f, app))?;
         //thread::sleep(time::Duration::from_millis(5000));
-        
-        // update app state (waits for keypress) 
+
+        // update app state (waits for keypress)
         if let Err(_) = app.update_state() {
             break;
-        } 
+        }
 
         // If keypress changed it to quit then break
         match app.get_mode() {

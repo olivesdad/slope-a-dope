@@ -34,6 +34,10 @@ impl App {
         }
     }
 
+    pub fn get_current_screen(&self) -> &ScreenID {
+        &self.current_screen
+    }
+
     pub fn get_mode(&self) -> &Mode {
         &self.mode
     }
@@ -64,22 +68,35 @@ impl App {
     //fn for editor mode
     fn update_selector_mode(&mut self) -> Result<(), ()> {
         if let Some(key) = get_key_press() {
+            let screen = self.get_current_screen();
             match key {
                 KeyCode::Esc => {
                     self.mode = Mode::Quit;
                 }
-                KeyCode::Left => {
-                    //move selector left
-                }
-                KeyCode::Right => {
-                    // move selector right
-                }
-                KeyCode::Up => {
-                    // move selector up
-                }
-                KeyCode::Down => {
-                    // move selector down
-                }
+                KeyCode::Left => match screen {
+                    ScreenID::Tester => {
+                        self.current_screen = ScreenID::P1;
+                    }
+                    _ => {}
+                },
+                KeyCode::Right => match screen {
+                    ScreenID::P1 | ScreenID::P2 => {
+                        self.current_screen = ScreenID::Tester;
+                    }
+                    _ => {}
+                },
+                KeyCode::Up => match screen {
+                    ScreenID::P2 => {
+                        self.current_screen = ScreenID::P1;
+                    }
+                    _ => {}
+                },
+                KeyCode::Down => match screen {
+                    ScreenID::P1 => {
+                        self.current_screen = ScreenID::P2;
+                    }
+                    _ => {}
+                },
                 KeyCode::Enter => {
                     // change to editor mode
                     self.mode = Mode::Edit;

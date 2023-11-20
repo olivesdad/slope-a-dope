@@ -11,7 +11,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::app::{App, Mode};
+use crate::app::{App, Mode, ScreenID};
 
 pub fn ui(f: &mut Frame, app: &App) {
     // Draw all the things
@@ -66,30 +66,43 @@ pub fn ui(f: &mut Frame, app: &App) {
     let mut sim_block = make_block(" Test function ");
     let footer_block = make_block(" Current Mode ");
 
+    // Color blocks for slector
+    match app.get_mode() {
+        Mode::Select => match app.get_current_screen() {
+            ScreenID::P1 => {
+                p1_block = p1_block.style(Style::default().fg(Color::LightMagenta));
+            }
+            ScreenID::P2 => {
+                p2_block = p2_block.style(Style::default().fg(Color::LightMagenta));
+            }
+            ScreenID::Tester => {
+                sim_block = sim_block.style(Style::default().fg(Color::LightMagenta));
+            }
+            _ => {}
+        },
+        _ => {}
+    }
+
     // get inner blocks for P1, P2, and sim
     // [P1]
     let p1_inner = p1_block.inner(p1_area);
     let p1_contents = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Percentage(50),
-                Constraint::Percentage(50),
-            ]).split(p1_inner);
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(p1_inner);
     let p1_v_block = make_block(" p1 Voltage ");
     let p1_p_block = make_block(" p1 Physical ");
     // [P2]
     let p2_inner = p2_block.inner(p2_area);
     let p2_contents = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Percentage(50),
-                Constraint::Percentage(50),
-            ]).split(p2_inner);
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(p2_inner);
     let p2_v_block = make_block(" p2 Voltage ");
     let p2_p_block = make_block(" p2 Physical ");
 
     // ------ Static contents ------
-    // Chart 
+    // Chart
 
     // Title
     let title_paragrah = Paragraph::new(Text::styled(
@@ -102,9 +115,9 @@ pub fn ui(f: &mut Frame, app: &App) {
 
     // Footer
     let s = match app.get_mode() {
-        Mode::Select => {"Mode: Selector"}
-        Mode::Edit => {"Mode: Editor"}
-        Mode::Quit => {"Bye Bye!"}
+        Mode::Select => "Mode: Selector",
+        Mode::Edit => "Mode: Editor",
+        Mode::Quit => "Bye Bye!",
     };
     let footer_text = Paragraph::new(s)
         .block(footer_block)
@@ -128,6 +141,7 @@ pub fn ui(f: &mut Frame, app: &App) {
 pub fn make_block<'a>(s: &'a str) -> Block<'a> {
     let block = Block::default()
         .borders(Borders::ALL)
+        .style(Style::default().fg(Color::White))
         .border_type(BorderType::Rounded)
         .title(s);
     return block;
