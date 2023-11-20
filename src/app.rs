@@ -25,13 +25,28 @@ pub enum ScreenID {
 
 impl App {
     pub fn new() -> Self {
-        App {
-            p1: None,
-            p2: None,
+        let mut app = App {
+            p1: Some(Point::from((5.0, 100.0))),
+            p2: Some(Point::from((0.0, 0.0))),
             line: None,
             current_screen: ScreenID::P1,
             mode: Mode::Select,
+        };
+        if app.update_line().is_ok() {};
+        return app;
+    }
+
+    pub fn update_line(&mut self) -> Result<(), ()> {
+        if let Some(p1) = &self.p1 {
+            if let Some(p2) = &self.p2 {
+                self.line = Some(Line::from((p1, p2)));
+            } else {
+                return Err(());
+            }
+        } else {
+            return Err(());
         }
+        Ok(())
     }
 
     pub fn get_current_screen(&self) -> &ScreenID {

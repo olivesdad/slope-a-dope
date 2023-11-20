@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 pub struct Line {
     slope: Option<f64>,
     intercept: Option<f64>,
@@ -21,7 +22,7 @@ impl Point {
             false
         }
     }
-    pub fn set_points(&mut self, x: f64, y: f64) {
+    pub fn set_point(&mut self, x: f64, y: f64) {
         self.voltage = Some(x);
         self.physical = Some(y);
     }
@@ -35,6 +36,7 @@ impl Line {
         }
     }
 
+    // updates slop and intercept given 2 points
     pub fn calc(&mut self, p1: &Point, p2: &Point) {
         if p1.is_valid() && p2.is_valid() {
             if p1.voltage == p2.voltage {
@@ -52,6 +54,14 @@ impl Line {
             self.intercept = None;
         }
     }
+
+    // Get values in uhh hashmap i guess
+    pub fn get_val(&self) -> HashMap<&str, f64> {
+        let mut vals = HashMap::new();
+        vals.insert("m", self.slope.unwrap_or(0.0).clone());
+        vals.insert("b", self.intercept.unwrap_or(0.0).clone());
+        vals
+    }
 }
 
 impl From<(&Point, &Point)> for Line {
@@ -62,6 +72,13 @@ impl From<(&Point, &Point)> for Line {
     }
 }
 
+impl From<(f64, f64)> for Point {
+    fn from(vals: (f64, f64)) -> Self {
+        let mut point = Point::new();
+        point.set_point(vals.0, vals.1);
+        point
+    }
+}
 // -------TESTS --------
 #[cfg(test)]
 mod tests {
@@ -78,8 +95,8 @@ mod tests {
         assert_eq!(None, line.intercept);
 
         //set values for p1 and p2
-        p1.set_points(0.0, 0.0);
-        p2.set_points(10.0, 10.0);
+        p1.set_point(0.0, 0.0);
+        p2.set_point(10.0, 10.0);
         line.calc(&p1, &p2);
 
         assert_eq!(1.0, line.slope.unwrap());
@@ -90,8 +107,8 @@ mod tests {
     fn test_line_from() {
         let mut p1 = Point::new();
         let mut p2 = Point::new();
-        p1.set_points(0.0, 0.0);
-        p2.set_points(10.0, 10.0);
+        p1.set_point(0.0, 0.0);
+        p2.set_point(10.0, 10.0);
 
         let line = Line::from((&p1, &p2));
         assert_eq!(1.0, line.slope.unwrap());
@@ -99,5 +116,14 @@ mod tests {
         let line2 = Line::from((&p2, &p1));
         assert_eq!(1.0, line2.slope.unwrap());
         assert_eq!(0.0, line2.intercept.unwrap());
+    }
+
+    #[test]
+    fn create_point_from_trait() {
+        let p1 = Point::from((0.0, 0.0));
+        let p2 = Point::from((10.0, 10.0));
+        let line = Line::from((&p1, &p2));
+        assert_eq!(1.0, line.slope.unwrap());
+        assert_eq!(0.0, line.intercept.unwrap());
     }
 }

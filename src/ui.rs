@@ -60,9 +60,9 @@ pub fn ui(f: &mut Frame, app: &App) {
 
     let title_block = make_block("");
     let help_block = make_block(" help ");
-    let mut p1_block = make_block(" p1 ");
-    let mut p2_block = make_block(" p2 ");
-    let chart_block = make_block(" Plot ");
+    let mut p1_block = make_block(" Point 1 ");
+    let mut p2_block = make_block(" Point 2 ");
+    let chart_block = make_block(" Results ");
     let mut sim_block = make_block(" Test function ");
     let footer_block = make_block(" Current Mode ");
 
