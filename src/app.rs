@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crossterm::event;
 use crossterm::event::{Event, KeyCode};
 
@@ -32,27 +34,47 @@ impl App {
             current_screen: ScreenID::P1,
             mode: Mode::Select,
         };
-        if app.update_line().is_ok() {};
+        app.update_line();
         return app;
     }
 
-    pub fn update_line(&mut self) -> Result<(), ()> {
+    //calculates the line based on the 2 points if one of the points is NONE then
+    pub fn update_line(&mut self) {
         if let Some(p1) = &self.p1 {
             if let Some(p2) = &self.p2 {
                 self.line = Some(Line::from((p1, p2)));
             } else {
-                return Err(());
+                self.line = None;
             }
         } else {
-            return Err(());
+            self.line = None;
         }
-        Ok(())
     }
-
+    // Get tuple with (m,b) from line
+    pub fn get_line_val(&self) -> Option<(f64, f64)> {
+        if self.line.is_some() {
+            self.line.as_ref().unwrap().get_val()
+        } else {
+            return None;
+        }
+    }
+    // track the current screen
     pub fn get_current_screen(&self) -> &ScreenID {
         &self.current_screen
     }
 
+    //get Point values
+    pub fn get_points(&self) -> Option<(HashMap<&str, f64>, HashMap<&str, f64>)> {
+        if let Some(p1) = &self.p1 {
+            if let Some(p2) = &self.p2 {
+                return Some((p1.get_val(), p2.get_val()));
+            } else {
+                return None;
+            }
+        } else {
+            return None;
+        }
+    }
     pub fn get_mode(&self) -> &Mode {
         &self.mode
     }

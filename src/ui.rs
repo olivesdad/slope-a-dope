@@ -66,6 +66,7 @@ pub fn ui(f: &mut Frame, app: &App) {
     let mut sim_block = make_block(" Test function ");
     let footer_block = make_block(" Current Mode ");
 
+    // ------ DYNAMIC RENDERED --------
     // Color blocks for slector
     match app.get_mode() {
         Mode::Select => match app.get_current_screen() {
@@ -77,6 +78,20 @@ pub fn ui(f: &mut Frame, app: &App) {
             }
             ScreenID::Tester => {
                 sim_block = sim_block.style(Style::default().fg(Color::LightMagenta));
+            }
+            _ => {}
+        },
+
+        // Color the highlighted cell red
+        Mode::Edit => match app.get_current_screen() {
+            ScreenID::P1 => {
+                p1_block = p1_block.style(Style::default().fg(Color::Green));
+            }
+            ScreenID::P2 => {
+                p2_block = p2_block.style(Style::default().fg(Color::Green));
+            }
+            ScreenID::Tester => {
+                sim_block = sim_block.style(Style::default().fg(Color::Green));
             }
             _ => {}
         },
@@ -101,8 +116,46 @@ pub fn ui(f: &mut Frame, app: &App) {
     let p2_v_block = make_block(" p2 Voltage ");
     let p2_p_block = make_block(" p2 Physical ");
 
-    // ------ Static contents ------
-    // Chart
+    // Make paragraphs for [P1] [P2]
+    if let Some(points) = app.get_points() {
+        // [P1]
+        let p1_v_text = Paragraph::new(format!("{:.4}", points.0.get("v").cloned().unwrap_or(0.0)))
+            .block(p1_v_block)
+            .alignment(Alignment::Center);
+        let p1_p_text = Paragraph::new(format!("{:.4}", points.0.get("p").cloned().unwrap_or(0.0)))
+            .block(p1_p_block)
+            .alignment(Alignment::Center);
+        // [P2]
+        let p2_v_text = Paragraph::new(format!(
+            "{:.4}",
+            points.1.get("v").cloned().unwrap_or(990.0)
+        ))
+        .block(p2_v_block)
+        .alignment(Alignment::Center);
+        let p2_p_text = Paragraph::new(format!(
+            "{:.4}",
+            points.1.get("p").cloned().unwrap_or(990.0)
+        ))
+        .block(p2_p_block)
+        .alignment(Alignment::Center);
+
+        // render
+        f.render_widget(p1_block, p1_area);
+        f.render_widget(p2_block, p2_area);
+        f.render_widget(p1_v_text, p1_contents[0]);
+        f.render_widget(p1_p_text, p1_contents[1]);
+        f.render_widget(p2_v_text, p2_contents[0]);
+        f.render_widget(p2_p_text, p2_contents[1]);
+    } else {
+        f.render_widget(p1_block, p1_area);
+        f.render_widget(p2_block, p2_area);
+        f.render_widget(p1_p_block, p1_contents[0]);
+        f.render_widget(p1_v_block, p1_contents[1]);
+        f.render_widget(p2_p_block, p2_contents[0]);
+        f.render_widget(p2_v_block, p2_contents[1]);
+    }
+
+    // ---- STATIC Colors -----
 
     // Title
     let title_paragrah = Paragraph::new(Text::styled(
@@ -126,15 +179,10 @@ pub fn ui(f: &mut Frame, app: &App) {
     //  ---- ----- Render things --- ----- -----
     f.render_widget(title_paragrah, title_area);
     f.render_widget(help_block, help_area);
-    f.render_widget(p1_block, p1_area);
-    f.render_widget(p2_block, p2_area);
+
     f.render_widget(sim_block, sim_area);
     f.render_widget(chart_block, chart_area);
     f.render_widget(footer_text, footer_area);
-    f.render_widget(p1_p_block, p1_contents[0]);
-    f.render_widget(p1_v_block, p1_contents[1]);
-    f.render_widget(p2_p_block, p2_contents[0]);
-    f.render_widget(p2_v_block, p2_contents[1]);
 }
 
 // ------- Helper Functions -------

@@ -26,6 +26,13 @@ impl Point {
         self.voltage = Some(x);
         self.physical = Some(y);
     }
+
+    pub fn get_val(&self) -> HashMap<&str, f64> {
+        let mut vals = HashMap::new();
+        vals.insert("v", self.voltage.clone().unwrap());
+        vals.insert("p", self.physical.clone().unwrap());
+        vals
+    }
 }
 
 impl Line {
@@ -56,11 +63,16 @@ impl Line {
     }
 
     // Get values in uhh hashmap i guess
-    pub fn get_val(&self) -> HashMap<&str, f64> {
-        let mut vals = HashMap::new();
-        vals.insert("m", self.slope.unwrap_or(0.0).clone());
-        vals.insert("b", self.intercept.unwrap_or(0.0).clone());
-        vals
+    pub fn get_val(&self) -> Option<(f64, f64)> {
+        if let Some(m) = self.slope {
+            if let Some(b) = self.intercept {
+                return Some((m, b));
+            } else {
+                return None;
+            }
+        } else {
+            return None;
+        }
     }
 }
 
