@@ -138,11 +138,11 @@ pub fn ui(f: &mut Frame, app: &App) {
         ))
         .block(p2_p_block)
         .alignment(Alignment::Center);
-    
-    // render
-    f.render_widget(p1_block, p1_area);
-    f.render_widget(p2_block, p2_area);
-    f.render_widget(p1_v_text, p1_contents[0]);
+
+        // render
+        f.render_widget(p1_block, p1_area);
+        f.render_widget(p2_block, p2_area);
+        f.render_widget(p1_v_text, p1_contents[0]);
         f.render_widget(p1_p_text, p1_contents[1]);
         f.render_widget(p2_v_text, p2_contents[0]);
         f.render_widget(p2_p_text, p2_contents[1]);
@@ -158,25 +158,21 @@ pub fn ui(f: &mut Frame, app: &App) {
     // get tester inner block before rendering it
     let temp = chart_block.inner(chart_area);
     let calc_contents = Layout::default()
-    .direction(Direction::Vertical)
-    .constraints([
-        Constraint::Max(2),
-        Constraint::Min(10),
-    ]).split(temp);
-    
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Max(2), Constraint::Min(10)])
+        .split(temp);
+
     // Render the border to not color everything
     f.render_widget(chart_block, chart_area);
-    
+
     // Equation def
     f.render_widget(
-        Paragraph::new(app.get_line_val())
-            .alignment(Alignment::Center),
-        calc_contents[0]
+        Paragraph::new(app.get_line_val()).alignment(Alignment::Center),
+        calc_contents[0],
     );
- 
-    
+
     // ---- STATIC Colors -----
-    
+
     // Title
     let title_paragrah = Paragraph::new(Text::styled(
         "Slope-a-Dope",
@@ -186,21 +182,22 @@ pub fn ui(f: &mut Frame, app: &App) {
     .alignment(Alignment::Center)
     .add_modifier(Modifier::BOLD);
 
-// Footer
-let s = match app.get_mode() {
-    Mode::Select => "Mode: Selector",
+    // Footer
+    let s = match app.get_mode() {
+        Mode::Select => "Mode: Selector",
         Mode::Edit => "Mode: Editor",
         Mode::Quit => "Bye Bye!",
+        _ => "",
     };
     let footer_text = Paragraph::new(s)
         .block(footer_block)
         .alignment(Alignment::Center);
-    
+
     //  ---- ----- Render things --- ----- -----
     f.render_widget(title_paragrah, title_area);
     f.render_widget(help_block, help_area);
     f.render_widget(sim_block, sim_area);
-    
+
     f.render_widget(footer_text, footer_area);
 }
 
