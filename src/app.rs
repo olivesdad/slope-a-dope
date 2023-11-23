@@ -51,11 +51,15 @@ impl App {
         }
     }
     // Get tuple with (m,b) from line
-    pub fn get_line_val(&self) -> Option<(f64, f64)> {
-        if self.line.is_some() {
-            self.line.as_ref().unwrap().get_val()
+    pub fn get_line_val(&self) -> String{
+        if let Some(line) = &self.line {
+            if let Some(vals) = line.get_val() {
+                format!("Slope: {} Intercept: {}", vals.0 ,vals.1)
+            } else {
+                "Unable to calculate line".to_owned()
+            }
         } else {
-            return None;
+            "Unable to calculate line".to_owned()
         }
     }
     // track the current screen
