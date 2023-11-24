@@ -151,7 +151,8 @@ impl App {
                         // Recalculate line if that succeeeds
 
                         // I need to know: which point and which value of that point
-                        let point_ref;
+                        // Which point were editing
+                        let mut point_ref = None;
                         match self.current_screen {
                             ScreenID::P1 => {
                                 point_ref = self.p1.as_mut();
@@ -159,8 +160,35 @@ impl App {
                             ScreenID::P2 => {
                                 point_ref = self.p2.as_mut();
                             }
+
                             _ => {} // TODO: Impliment tester
                         }
+                        // Which value of the point
+                        if let Some(ce) = self.currently_editing.as_ref() {
+                            // Try to parse the string to f64. If it's succesful update the point
+                            if let Some(val) = self.temp_point.as_ref() {
+                                if let Ok(parsed) = val.parse::<f64>() {
+                                    match ce {
+                                        CurrentlyEditing::Physical => {
+                                            if let Some(p) = point_ref {
+                                                p.set_physical(parsed);
+                                            }
+                                        }
+                                        CurrentlyEditing::Voltage => {
+                                            if let Some(p) = point_ref {
+                                                p.set_voltage(parsed);
+                                            }
+                                        }
+                                    }
+                                    // Recalculate the line
+                                    self.update_line();
+                                }
+                            }
+                        }
+                        // Wipe the temp string back to None
+                        self.temp_point = None;
+                        // Switch the mode back
+                        self.mode = Mode::Edit;
                     }
 
                     _ => {}
