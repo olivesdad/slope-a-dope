@@ -12,13 +12,9 @@ pub struct App {
     current_screen: ScreenID,
     mode: Mode,
     currently_editing: Option<CurrentlyEditing>,
-    temp_point: (String, String),
+    temp_point: Option<String>,
 }
 
-pub struct TempPoint {
-    pub input_p: Option<String>,
-    pub input_v: Option<String>,
-}
 pub enum CurrentlyEditing {
     Voltage,
     Physical,
@@ -26,6 +22,7 @@ pub enum CurrentlyEditing {
 
 pub enum Mode {
     Edit,
+    EditingValue,
     Select,
     Quit,
     EditPoint,
@@ -37,7 +34,6 @@ pub enum ScreenID {
     Quit,
 }
 
-
 impl App {
     pub fn new() -> Self {
         let mut app = App {
@@ -47,7 +43,7 @@ impl App {
             current_screen: ScreenID::P1,
             mode: Mode::Select,
             currently_editing: None,
-            temp_point: (String::new(), String::new()),
+            temp_point: None,
         };
         app.update_line();
         return app;
@@ -66,10 +62,10 @@ impl App {
         }
     }
     // Get tuple with (m,b) from line
-    pub fn get_line_val(&self) -> String{
+    pub fn get_line_val(&self) -> String {
         if let Some(line) = &self.line {
             if let Some(vals) = line.get_val() {
-                format!("Slope: {:.4} Intercept: {:.4}", vals.0 ,vals.1)
+                format!("Slope: {:.4} Intercept: {:.4}", vals.0, vals.1)
             } else {
                 "Unable to calculate line".to_owned()
             }
@@ -105,7 +101,7 @@ impl App {
             Mode::Select => self.update_selector_mode()?,
             Mode::Quit => return Err(()),
             Mode::EditPoint => self.edit_point()?,
-            _=>{}
+            _ => {}
         }
         Ok(())
     }
@@ -126,13 +122,59 @@ impl App {
         Ok(())
     }
 
+    /*
+     * MODE = EditingValue
+     * In this Mode we want to just edit a string to display in place of the value
+     * We want the user to be able to edit 1 value from each point
+     * the UI must handle switching the displayed text from the actual point to this.
+     * w
+     */
+    fn edit_value(&mut self) {
+        // Access String in temp_point
+        if let Some(s) = self.temp_point.as_mut() {
+            //listen for keypress
+            if let Some(key) = get_key_press() {
+                match key {
+                    KeyCode::Backspace => {
+                        s.pop();
+                    }
+                    KeyCode::Char(c) => {
+                        s.push(c);
+                    }
+                    KeyCode::Esc => {
+                        // escape will clear the string and switch mode back to editing
+                        self.temp_point = None;
+                        self.mode = Mode::Edit;
+                    }
+                    KeyCode::Enter => {
+                        // Enter will attempt to push the value back into the point. If it fails to parse the value change nothing
+                        // Recalculate line if that succeeeds
 
+                        // I need to know: which point and which value of that point
+                        let point_ref;
+                        match self.current_screen {
+                            ScreenID::P1 => {
+                                point_ref = self.p1.as_mut();
+                            }
+                            ScreenID::P2 => {
+                                point_ref = self.p2.as_mut();
+                            }
+                            _ => {} // TODO: Impliment tester
+                        }
+                    }
+
+                    _ => {}
+                }
+            }
+        } else {
+            self.temp_point = Some(String::new());
+        }
+    }
     // edit a point
-    fn edit_point(&mut self) -> Result<(),()>{
-
-        // If were already editing then we need to match the state
+    fn edit_point(&mut self) -> Result<(), ()> {
+        /*        // If were already editing then we need to match the state
         if let Some(current) = &self.currently_editing {
-            //listen for a keypress 
+            //listen for a keypress
             if let Some(key) = get_key_press() {
                 // determine which point were editing
                 match current {
@@ -164,7 +206,7 @@ impl App {
                                 // If we press enter then change currently editing to None, clear Strings, convert strings into new point
                                 self.currently_editing = None;
                                 self.mode = Mode::Select;
-                                
+
                                 //try to parse points
                                 let v = self.temp_point.0.parse::<f64>().unwrap_or(0.0);
                                 let p = self.temp_point.1.parse::<f64>().unwrap_or(0.0);
@@ -174,7 +216,7 @@ impl App {
                                 self.temp_point = (String::new(), String::new());
                                 // assign the new point to p1 or p2 and then update line
                                 match self.current_screen {
-                                    ScreenID::P1 =>{
+                                    ScreenID::P1 =>{currently_editing
                                         self.p1 = Some(point);
                                         self.update_line();
                                     }
@@ -192,11 +234,9 @@ impl App {
             }
         } else {
             self.currently_editing = Some(CurrentlyEditing::Voltage);
-        }
+        } */
         Ok(())
     }
-
-
 
     //fn for editor mode
     fn update_selector_mode(&mut self) -> Result<(), ()> {
