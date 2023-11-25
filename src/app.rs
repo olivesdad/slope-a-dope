@@ -59,6 +59,9 @@ impl App {
             self.line = None;
         }
     }
+    /*
+      -=-=-=-=-=-  Getters and Setters -=-=-=-=-=-=-
+     */
     // Get tuple with (m,b) from line
     pub fn get_line_val(&self) -> String {
         if let Some(line) = &self.line {
@@ -101,6 +104,9 @@ impl App {
         &self.mode
     }
 
+    
+
+    
     // Update the status we should call differnt functions based on the modes
     pub fn update_state(&mut self) -> Result<(), ()> {
         match self.mode {
