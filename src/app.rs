@@ -30,7 +30,6 @@ pub enum ScreenID {
     P1,
     P2,
     Tester,
-    Quit,
 }
 
 impl App {
@@ -78,12 +77,8 @@ impl App {
     }
     pub fn get_temp_point(&self) -> &str {
         match self.temp_point.as_ref() {
-            Some(x) => {
-                x
-            }
-            None => {
-                ""
-            }
+            Some(x) => x,
+            None => "",
         }
     }
     pub fn get_currently_editing(&self) -> &Option<CurrentlyEditing> {
@@ -113,7 +108,6 @@ impl App {
             Mode::Select => self.update_selector_mode()?,
             Mode::Quit => return Err(()),
             Mode::EditingValue => self.edit_value()?,
-            _ => {}
         }
         Ok(())
     }
