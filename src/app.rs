@@ -25,7 +25,6 @@ pub enum Mode {
     EditingValue,
     Select,
     Quit,
-    EditPoint,
 }
 pub enum ScreenID {
     P1,
@@ -77,6 +76,19 @@ impl App {
     pub fn get_current_screen(&self) -> &ScreenID {
         &self.current_screen
     }
+    pub fn get_temp_point(&self) -> &str {
+        match self.temp_point.as_ref() {
+            Some(x) => {
+                x
+            }
+            None => {
+                ""
+            }
+        }
+    }
+    pub fn get_currently_editing(&self) -> &Option<CurrentlyEditing> {
+        &self.currently_editing
+    }
 
     //get Point values
     pub fn get_points(&self) -> Option<(HashMap<&str, f64>, HashMap<&str, f64>)> {
@@ -100,24 +112,8 @@ impl App {
             Mode::Edit => self.update_editor_mode()?,
             Mode::Select => self.update_selector_mode()?,
             Mode::Quit => return Err(()),
-            Mode::EditPoint => self.edit_point()?,
+            Mode::EditingValue => self.edit_value()?,
             _ => {}
-        }
-        Ok(())
-    }
-
-    //fn for editor mode
-    fn update_editor_mode(&mut self) -> Result<(), ()> {
-        if let Some(key) = get_key_press() {
-            match key {
-                KeyCode::Esc => {
-                    self.mode = Mode::Select;
-                }
-                KeyCode::Enter => {
-                    self.mode = Mode::EditPoint;
-                }
-                _ => {}
-            }
         }
         Ok(())
     }
@@ -129,7 +125,7 @@ impl App {
      * the UI must handle switching the displayed text from the actual point to this.
      * w
      */
-    fn edit_value(&mut self) {
+    fn edit_value(&mut self) -> Result<(), ()> {
         // Access String in temp_point
         if let Some(s) = self.temp_point.as_mut() {
             //listen for keypress
@@ -197,76 +193,66 @@ impl App {
         } else {
             self.temp_point = Some(String::new());
         }
+        Ok(())
     }
-    // edit a point
-    fn edit_point(&mut self) -> Result<(), ()> {
-        /*        // If were already editing then we need to match the state
-        if let Some(current) = &self.currently_editing {
-            //listen for a keypress
+    /*
+     * Mode = Edit
+     * This function is entered when we are in Editing mode.
+     * It needs to:
+     *  - If escape is pressed it needs to: { turn currently_editing back off, switch mode to select}
+     *  - set currently_editing enum to Some(CurrentlyEditing)
+     *  - Toggle which value, physical or voltage, is being currently edited as arrow keys are pressed
+     *  - enter EditingValue mode if enter is pressed
+     */
+    fn update_editor_mode(&mut self) -> Result<(), ()> {
+        // check if we have a currently_editing value
+        if self.currently_editing.is_some() {
             if let Some(key) = get_key_press() {
-                // determine which point were editing
-                match current {
-                    CurrentlyEditing::Voltage => {
-                        // match the keypress
-                        match key {
-                            KeyCode::Char(c) => {
-                                self.temp_point.0.push(c);
-                            }
-                            KeyCode::Enter =>{
-                                // If we press enter then change currently editing to Physical
-                                self.currently_editing = Some(CurrentlyEditing::Physical)
-                            }
-                            KeyCode::Backspace => {
-                                self.temp_point.0.pop();
-                            }
-                            _=>{}
-                        }
+                match key {
+                    KeyCode::Esc => {
+                        self.currently_editing = None;
+                        self.mode = Mode::Select;
                     }
-                    CurrentlyEditing::Physical => {
-                        match key {
-                            KeyCode::Backspace => {
-                                self.temp_point.1.pop();
-                            }
-                            KeyCode::Char(c) => {
-                                self.temp_point.1.push(c);
-                            }
-                            KeyCode::Enter =>{
-                                // If we press enter then change currently editing to None, clear Strings, convert strings into new point
-                                self.currently_editing = None;
-                                self.mode = Mode::Select;
-
-                                //try to parse points
-                                let v = self.temp_point.0.parse::<f64>().unwrap_or(0.0);
-                                let p = self.temp_point.1.parse::<f64>().unwrap_or(0.0);
-                                // a new point
-                                let point = Point::from((v,p));
-                                //wipe string
-                                self.temp_point = (String::new(), String::new());
-                                // assign the new point to p1 or p2 and then update line
-                                match self.current_screen {
-                                    ScreenID::P1 =>{currently_editing
-                                        self.p1 = Some(point);
-                                        self.update_line();
-                                    }
-                                    ScreenID::P2 => {
-                                        self.p2 = Some(point);
-                                        self.update_line();
-                                    }
-                                    _=>{}
-                                }
-                            }
-                            _=>{}
-                        }
+                    KeyCode::Enter => {
+                        self.mode = Mode::EditingValue;
                     }
+                    KeyCode::Down => match self.current_screen {
+                        ScreenID::P1 | ScreenID::P2 => {
+                            self.currently_editing = Some(CurrentlyEditing::Physical);
+                        }
+                        _ => {}
+                    },
+                    KeyCode::Up => match self.current_screen {
+                        ScreenID::P1 | ScreenID::P2 => {
+                            self.currently_editing = Some(CurrentlyEditing::Voltage);
+                        }
+                        _ => {}
+                    },
+                    KeyCode::Left => match self.current_screen {
+                        ScreenID::Tester => {
+                            self.currently_editing = Some(CurrentlyEditing::Voltage);
+                        }
+                        _ => {}
+                    },
+                    KeyCode::Right => match self.current_screen {
+                        ScreenID::Tester => {
+                            self.currently_editing = Some(CurrentlyEditing::Physical)
+                        }
+                        _ => {}
+                    },
+                    _ => {}
                 }
             }
         } else {
             self.currently_editing = Some(CurrentlyEditing::Voltage);
-        } */
+        }
         Ok(())
     }
 
-    //fn for editor mode
+    /*
+     * MODE = Select
+     * This mode is just responsible for switching the screen, quitting, and entering Edit mode
+     */
     fn update_selector_mode(&mut self) -> Result<(), ()> {
         if let Some(key) = get_key_press() {
             let screen = self.get_current_screen();
@@ -300,6 +286,7 @@ impl App {
                 },
                 KeyCode::Enter => {
                     // change to editor mode
+                    self.currently_editing = Some(CurrentlyEditing::Voltage);
                     self.mode = Mode::Edit;
                 }
                 // Every other one is useless
