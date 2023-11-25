@@ -26,6 +26,13 @@ impl Point {
         self.voltage = Some(x);
         self.physical = Some(y);
     }
+    pub fn set_voltage(&mut self, v: f64) {
+        self.voltage = Some(v);
+    }
+
+    pub fn set_physical(&mut self, p: f64) {
+        self.physical = Some(p);
+    }
 
     pub fn get_val(&self) -> HashMap<&str, f64> {
         let mut vals = HashMap::new();

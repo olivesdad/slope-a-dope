@@ -2,7 +2,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     prelude::Alignment,
     style::{Color, Modifier, Style, Stylize},
-    symbols,
+    symbols::{self, block},
     text::{Span, Text},
     widgets::{
         block::title, Axis, Block, BorderType, Borders, Chart, Dataset, Gauge, GraphType, Padding,
@@ -11,7 +11,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::app::{App, Mode, ScreenID};
+use crate::app::{App, CurrentlyEditing, Mode, ScreenID};
 
 pub fn ui(f: &mut Frame, app: &App) {
     // Draw all the things
@@ -67,6 +67,25 @@ pub fn ui(f: &mut Frame, app: &App) {
     let footer_block = make_block(" Current Mode ");
 
     // ------ DYNAMIC RENDERED --------
+
+    // get inner blocks for P1, P2, and sim
+    // [P1]
+    let p1_inner = p1_block.inner(p1_area);
+    let p1_contents = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(p1_inner);
+    let mut p1_v_block = make_block(" p1 Voltage ");
+    let mut p1_p_block = make_block(" p1 Physical ");
+    // [P2]
+    let p2_inner = p2_block.inner(p2_area);
+    let p2_contents = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(p2_inner);
+    let mut p2_v_block = make_block(" p2 Voltage ");
+    let mut p2_p_block = make_block(" p2 Physical ");
+
     // Color blocks for slector
     match app.get_mode() {
         Mode::Select => match app.get_current_screen() {
@@ -82,62 +101,136 @@ pub fn ui(f: &mut Frame, app: &App) {
             _ => {}
         },
 
-        // Color the highlighted cell red
+        // Color the highlighted cell will paint cells in edit mode and persist the outer coloring through editing value mode
         Mode::Edit => match app.get_current_screen() {
             ScreenID::P1 => {
                 p1_block = p1_block.style(Style::default().fg(Color::Green));
+                // Color volt/phys selector
+                if let Some(point_value) = app.get_currently_editing() {
+                    match point_value {
+                        crate::app::CurrentlyEditing::Voltage => {
+                            //currently editing voltage need to color it yellow
+                            p1_v_block = p1_v_block.style(Style::default().fg(Color::LightMagenta))
+                        }
+                        crate::app::CurrentlyEditing::Physical => {
+                            //currently editing voltage need to color it yellow
+                            p1_p_block = p1_p_block.style(Style::default().fg(Color::LightMagenta))
+                        }
+                        _ => {}
+                    }
+                }
             }
             ScreenID::P2 => {
                 p2_block = p2_block.style(Style::default().fg(Color::Green));
+                if let Some(point_value) = app.get_currently_editing() {
+                    match point_value {
+                        crate::app::CurrentlyEditing::Voltage => {
+                            //currently editing voltage need to color it yellow
+                            p2_v_block = p2_v_block.style(Style::default().fg(Color::LightMagenta))
+                        }
+                        crate::app::CurrentlyEditing::Physical => {
+                            //currently editing voltage need to color it yellow
+                            p2_p_block = p2_p_block.style(Style::default().fg(Color::LightMagenta))
+                        }
+                        _ => {}
+                    }
+                }
             }
             ScreenID::Tester => {
                 sim_block = sim_block.style(Style::default().fg(Color::Green));
             }
             _ => {}
         },
+        // Handle coloring and editng values in EditValue mode
+        // We need to repaint the currently_editing value cell
+        Mode::EditingValue => {
+            if let Some(x) = app.get_currently_editing() {
+                match app.get_current_screen() {
+                    ScreenID::P1 => match x {
+                        CurrentlyEditing::Physical => {
+                            p1_block = p1_block.style(Style::default().fg(Color::Green));
+                            p1_p_block = p1_p_block.style(Style::default().fg(Color::Green));
+                        }
+                        CurrentlyEditing::Voltage => {
+                            p1_block = p1_block.style(Style::default().fg(Color::Green));
+                            p1_v_block = p1_v_block.style(Style::default().fg(Color::Green));
+                        }
+                    },
+                    ScreenID::P2 => match x {
+                        CurrentlyEditing::Physical => {
+                            p2_block = p2_block.style(Style::default().fg(Color::Green));
+                            p2_p_block = p2_p_block.style(Style::default().fg(Color::Green))
+                        }
+                        CurrentlyEditing::Voltage => {
+                            p2_block = p2_block.style(Style::default().fg(Color::Green));
+                            p2_v_block = p2_v_block.style(Style::default().fg(Color::Green))
+                        }
+                    },
+                    ScreenID::Tester => {}
+                    _ => {}
+                }
+            }
+        }
+        // Color for editingValue
         _ => {}
     }
 
-    // get inner blocks for P1, P2, and sim
-    // [P1]
-    let p1_inner = p1_block.inner(p1_area);
-    let p1_contents = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(p1_inner);
-    let p1_v_block = make_block(" p1 Voltage ");
-    let p1_p_block = make_block(" p1 Physical ");
-    // [P2]
-    let p2_inner = p2_block.inner(p2_area);
-    let p2_contents = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(p2_inner);
-    let p2_v_block = make_block(" p2 Voltage ");
-    let p2_p_block = make_block(" p2 Physical ");
-
     // Make paragraphs for [P1] [P2]
     if let Some(points) = app.get_points() {
+        
+        // Determine if we should use the temp_point or the stored p1 and p2 values 
+        // First set the point values
+        let mut p1_v_str = format!("{:.4}", points.0.get("v").cloned().unwrap_or(0.0));
+        let mut p1_p_str = format!("{:.4}", points.0.get("p").cloned().unwrap_or(0.0));
+        let mut p2_v_str= format!("{:.4}", points.1.get("v").cloned().unwrap_or(990.0));
+        let mut p2_p_str = format!("{:.4}",points.1.get("p").cloned().unwrap_or(990.0));
+        // Then overwrite as needed for editingvalue mode
+        if let Mode::EditingValue = app.get_mode() {
+            if let Some(x) = app.get_currently_editing() {
+            match app.get_current_screen() {
+                ScreenID::P1 => {
+                    match x {
+                        CurrentlyEditing::Physical => {
+                            p1_p_str = app.get_temp_point().into();
+                        }
+                        CurrentlyEditing::Voltage => {
+                            p1_v_str = app.get_temp_point().into();
+                        }
+                    }
+                }
+                ScreenID::P2 => {
+                    match x {
+                        CurrentlyEditing::Physical => {
+                            p2_p_str = app.get_temp_point().into();
+                        }
+                        CurrentlyEditing::Voltage => {
+                            p2_v_str = app.get_temp_point().into();
+                        }
+                    }
+                }
+                ScreenID::Tester => {
+                    match x {
+                        CurrentlyEditing::Physical => {
+
+                        }
+                        CurrentlyEditing::Voltage => {
+                            
+                        }
+                    }
+                }
+                _=>{}
+            }
+        }
+        }
+        // make the paragraphs
         // [P1]
-        let p1_v_text = Paragraph::new(format!("{:.4}", points.0.get("v").cloned().unwrap_or(0.0)))
-            .block(p1_v_block)
-            .alignment(Alignment::Center);
-        let p1_p_text = Paragraph::new(format!("{:.4}", points.0.get("p").cloned().unwrap_or(0.0)))
-            .block(p1_p_block)
-            .alignment(Alignment::Center);
+        let p1_v_text = make_paragraph(&p1_v_str,p1_v_block);
+        let p1_p_text = make_paragraph(&p1_p_str,p1_p_block);
+
         // [P2]
-        let p2_v_text = Paragraph::new(format!(
-            "{:.4}",
-            points.1.get("v").cloned().unwrap_or(990.0)
-        ))
-        .block(p2_v_block)
-        .alignment(Alignment::Center);
-        let p2_p_text = Paragraph::new(format!(
-            "{:.4}",
-            points.1.get("p").cloned().unwrap_or(990.0)
-        ))
-        .block(p2_p_block)
-        .alignment(Alignment::Center);
+        let p2_v_text = make_paragraph(&p2_v_str,p2_v_block);
+        let p2_p_text = make_paragraph(&p2_p_str, p2_p_block);
+
 
         // render
         f.render_widget(p1_block, p1_area);
@@ -184,9 +277,10 @@ pub fn ui(f: &mut Frame, app: &App) {
 
     // Footer
     let s = match app.get_mode() {
-        Mode::Select => "Mode: Selector",
-        Mode::Edit => "Mode: Editor",
+        Mode::Select => "Mode: Select Point",
+        Mode::Edit => "Mode: Value Selection",
         Mode::Quit => "Bye Bye!",
+        Mode::EditingValue => "Editing Value",
         _ => "",
     };
     let footer_text = Paragraph::new(s)
@@ -213,4 +307,8 @@ pub fn make_block<'a>(s: &'a str) -> Block<'a> {
 
 pub fn set_active(b: Block) -> Block {
     b.style(Style::default().fg(Color::Green))
+}
+
+pub fn make_paragraph<'a>(s: &'a str, b: Block<'a>) -> Paragraph<'a>{
+    Paragraph::new(s).block(b).alignment(Alignment::Center)
 }
