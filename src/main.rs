@@ -1,28 +1,29 @@
 mod app;
 mod calculator;
-mod events;
 mod ui;
 use app::App;
 
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
+    event::{DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 
 use ratatui::{
-    backend::{self, Backend, CrosstermBackend},
+    backend::{Backend, CrosstermBackend},
     Terminal,
 };
 
-use std::{error::Error, io, thread, time};
+use std::{error::Error, io};
 
 fn main() -> Result<(), Box<dyn Error>> {
     //setup terminal
     enable_raw_mode()?;
+;
     //use to log to stderr
     let mut stderr = io::stderr();
     execute!(stderr, EnterAlternateScreen)?;
+
 
     // elements
     let backend = CrosstermBackend::new(stderr);

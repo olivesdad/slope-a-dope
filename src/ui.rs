@@ -2,7 +2,6 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     prelude::Alignment,
     style::{Color, Modifier, Style, Stylize},
-    symbols::{self, block},
     text::{Span, Text},
     widgets::{
         block::title, Axis, Block, BorderType, Borders, Chart, Dataset, Gauge, GraphType, Padding,
@@ -16,7 +15,7 @@ use crate::app::{App, CurrentlyEditing, Mode, ScreenID};
 pub fn ui(f: &mut Frame, app: &App) {
     // Draw all the things
 
-    /// ----- Break the frame into work spaces ------ ////
+    // ----- Break the frame into work spaces ------ ////
     let rows = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Max(3), Constraint::Min(20), Constraint::Max(3)])
@@ -98,7 +97,6 @@ pub fn ui(f: &mut Frame, app: &App) {
             ScreenID::Tester => {
                 sim_block = sim_block.style(Style::default().fg(Color::LightMagenta));
             }
-            _ => {}
         },
 
         // Color the highlighted cell will paint cells in edit mode and persist the outer coloring through editing value mode
@@ -116,7 +114,6 @@ pub fn ui(f: &mut Frame, app: &App) {
                             //currently editing voltage need to color it yellow
                             p1_p_block = p1_p_block.style(Style::default().fg(Color::LightMagenta))
                         }
-                        _ => {}
                     }
                 }
             }
@@ -132,14 +129,12 @@ pub fn ui(f: &mut Frame, app: &App) {
                             //currently editing voltage need to color it yellow
                             p2_p_block = p2_p_block.style(Style::default().fg(Color::LightMagenta))
                         }
-                        _ => {}
                     }
                 }
             }
             ScreenID::Tester => {
                 sim_block = sim_block.style(Style::default().fg(Color::Green));
             }
-            _ => {}
         },
         // Handle coloring and editng values in EditValue mode
         // We need to repaint the currently_editing value cell
@@ -167,7 +162,6 @@ pub fn ui(f: &mut Frame, app: &App) {
                         }
                     },
                     ScreenID::Tester => {}
-                    _ => {}
                 }
             }
         }
@@ -177,60 +171,47 @@ pub fn ui(f: &mut Frame, app: &App) {
 
     // Make paragraphs for [P1] [P2]
     if let Some(points) = app.get_points() {
-        
-        // Determine if we should use the temp_point or the stored p1 and p2 values 
+        // Determine if we should use the temp_point or the stored p1 and p2 values
         // First set the point values
         let mut p1_v_str = format!("{:.4}", points.0.get("v").cloned().unwrap_or(0.0));
         let mut p1_p_str = format!("{:.4}", points.0.get("p").cloned().unwrap_or(0.0));
-        let mut p2_v_str= format!("{:.4}", points.1.get("v").cloned().unwrap_or(990.0));
-        let mut p2_p_str = format!("{:.4}",points.1.get("p").cloned().unwrap_or(990.0));
+        let mut p2_v_str = format!("{:.4}", points.1.get("v").cloned().unwrap_or(990.0));
+        let mut p2_p_str = format!("{:.4}", points.1.get("p").cloned().unwrap_or(990.0));
         // Then overwrite as needed for editingvalue mode
         if let Mode::EditingValue = app.get_mode() {
             if let Some(x) = app.get_currently_editing() {
-            match app.get_current_screen() {
-                ScreenID::P1 => {
-                    match x {
+                match app.get_current_screen() {
+                    ScreenID::P1 => match x {
                         CurrentlyEditing::Physical => {
                             p1_p_str = app.get_temp_point().into();
                         }
                         CurrentlyEditing::Voltage => {
                             p1_v_str = app.get_temp_point().into();
                         }
-                    }
-                }
-                ScreenID::P2 => {
-                    match x {
+                    },
+                    ScreenID::P2 => match x {
                         CurrentlyEditing::Physical => {
                             p2_p_str = app.get_temp_point().into();
                         }
                         CurrentlyEditing::Voltage => {
                             p2_v_str = app.get_temp_point().into();
                         }
-                    }
+                    },
+                    ScreenID::Tester => match x {
+                        CurrentlyEditing::Physical => {}
+                        CurrentlyEditing::Voltage => {}
+                    },
                 }
-                ScreenID::Tester => {
-                    match x {
-                        CurrentlyEditing::Physical => {
-
-                        }
-                        CurrentlyEditing::Voltage => {
-                            
-                        }
-                    }
-                }
-                _=>{}
             }
-        }
         }
         // make the paragraphs
         // [P1]
-        let p1_v_text = make_paragraph(&p1_v_str,p1_v_block);
-        let p1_p_text = make_paragraph(&p1_p_str,p1_p_block);
+        let p1_v_text = make_paragraph(&p1_v_str, p1_v_block);
+        let p1_p_text = make_paragraph(&p1_p_str, p1_p_block);
 
         // [P2]
-        let p2_v_text = make_paragraph(&p2_v_str,p2_v_block);
+        let p2_v_text = make_paragraph(&p2_v_str, p2_v_block);
         let p2_p_text = make_paragraph(&p2_p_str, p2_p_block);
-
 
         // render
         f.render_widget(p1_block, p1_area);
@@ -281,7 +262,6 @@ pub fn ui(f: &mut Frame, app: &App) {
         Mode::Edit => "Mode: Value Selection",
         Mode::Quit => "Bye Bye!",
         Mode::EditingValue => "Editing Value",
-        _ => "",
     };
     let footer_text = Paragraph::new(s)
         .block(footer_block)
@@ -305,10 +285,6 @@ pub fn make_block<'a>(s: &'a str) -> Block<'a> {
     return block;
 }
 
-pub fn set_active(b: Block) -> Block {
-    b.style(Style::default().fg(Color::Green))
-}
-
-pub fn make_paragraph<'a>(s: &'a str, b: Block<'a>) -> Paragraph<'a>{
+pub fn make_paragraph<'a>(s: &'a str, b: Block<'a>) -> Paragraph<'a> {
     Paragraph::new(s).block(b).alignment(Alignment::Center)
 }
