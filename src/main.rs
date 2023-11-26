@@ -18,7 +18,7 @@ use std::{error::Error, io};
 fn main() -> Result<(), Box<dyn Error>> {
     //setup terminal
     enable_raw_mode()?;
-;
+
     //use to log to stderr
     let mut stderr = io::stderr();
     execute!(stderr, EnterAlternateScreen)?;

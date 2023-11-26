@@ -8,6 +8,13 @@ pub struct Point {
     physical: Option<f64>,
 }
 
+//use this to pass a value into the equation
+pub enum MeasurementType {
+    voltage(f64),
+    physical(f64),
+}
+
+
 impl Point {
     pub fn new() -> Self {
         Point {
@@ -81,6 +88,22 @@ impl Line {
             return None;
         }
     }
+
+    // pub fn to take a value of type v or p and 
+    pub fn get_corresponding_value(&self, value: MeasurementType) -> Result<(f64),()> {
+        if let (Some(m), Some(b)) = (self.slope.as_ref(), self.intercept.as_ref()){
+        match  value {
+            MeasurementType::physical(y) =>{
+                return Ok((y-b)/m)
+            }
+            MeasurementType::voltage(x) => {
+                return Ok(m * x + b)
+            }
+            
+        }
+    } 
+        Err(())
+    }
 }
 
 impl From<(&Point, &Point)> for Line {
@@ -144,5 +167,6 @@ mod tests {
         let line = Line::from((&p1, &p2));
         assert_eq!(1.0, line.slope.unwrap());
         assert_eq!(0.0, line.intercept.unwrap());
+        assert_eq!(5.0, line.get_corresponding_value(crate::calculator::MeasurementType::physical(5.0)).unwrap());
     }
 }

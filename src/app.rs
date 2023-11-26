@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crossterm::event;
 use crossterm::event::{Event, KeyCode};
 
-use crate::calculator::{Line, Point};
+use crate::calculator::{Line, Point, MeasurementType};
 
 pub struct App {
     p1: Option<Point>,
@@ -13,6 +13,7 @@ pub struct App {
     mode: Mode,
     currently_editing: Option<CurrentlyEditing>,
     temp_point: Option<String>,
+    plot: Vec<(f64, f64)>,
 }
 
 pub enum CurrentlyEditing {
@@ -42,6 +43,7 @@ impl App {
             mode: Mode::Select,
             currently_editing: None,
             temp_point: None,
+            plot: Vec::new(),
         };
         app.update_line();
         return app;
@@ -59,9 +61,27 @@ impl App {
             self.line = None;
         }
     }
+
+    // Function to update the vector we will use to plot
+    pub fn update_vector(&mut self) {
+        // vector contents should look like [(v0,p0),(v1,p1), (v2,p2)....(vn,pn)]
+
+        // Wipe the existing vector
+        self.plot = Vec::new();
+
+        // generate new vector
+    }
+
+
     /*
       -=-=-=-=-=-  Getters and Setters -=-=-=-=-=-=-
      */
+
+    pub fn get_test_point(&self, v: MeasurementType) -> Result<f64,()> {
+        let line = self.line.as_ref().ok_or(())?;
+        line.get_corresponding_value(v)
+
+    }
     // Get tuple with (m,b) from line
     pub fn get_line_val(&self) -> String {
         if let Some(line) = &self.line {
@@ -104,7 +124,10 @@ impl App {
         &self.mode
     }
 
-    
+    /*
+     *  App control functions. The App is drivern by main by calling update_state.
+     *  Update state will use different control flow depending on the curren mode  
+     */
 
     
     // Update the status we should call differnt functions based on the modes
@@ -117,6 +140,11 @@ impl App {
         }
         Ok(())
     }
+
+    /*
+     * The following functions are called by update_state depending on the mode. They will listen for keypress
+     * by calling the get_key_press function  then handle the keypress accodringly
+     */ 
 
     /*
      * MODE = EditingValue
@@ -195,11 +223,12 @@ impl App {
         }
         Ok(())
     }
+
     /*
      * Mode = Edit
-     * This function is entered when we are in Editing mode.
+     * This function is entered when we are in Editing mode. The name is kind of missleading because of the initial design. It is more like "pre-edit"
      * It needs to:
-     *  - If escape is pressed it needs to: { turn currently_editing back off, switch mode to select}
+     *  - If escape is pressed it needs to: { turn currently_editing back to None, switch mode to select}
      *  - set currently_editing enum to Some(CurrentlyEditing)
      *  - Toggle which value, physical or voltage, is being currently edited as arrow keys are pressed
      *  - enter EditingValue mode if enter is pressed
