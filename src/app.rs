@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crossterm::event;
 use crossterm::event::{Event, KeyCode};
 
-use crate::calculator::{Line, Point, MeasurementType};
+use crate::calculator::{Line, MeasurementType, Point};
 
 pub struct App {
     p1: Option<Point>,
@@ -54,6 +54,7 @@ impl App {
         if let Some(p1) = &self.p1 {
             if let Some(p2) = &self.p2 {
                 self.line = Some(Line::from((p1, p2)));
+                self.update_vector();
             } else {
                 self.line = None;
             }
@@ -70,17 +71,39 @@ impl App {
         self.plot = Vec::new();
 
         // generate new vector
+        // get the highest x and y value
+
+        // get the lowest x and y value
+        let start: MeasurementType;
+        let end: MeasurementType;
+        if let (Some(x1), Some(x2)) = (self.p1.as_ref(), self.p2.as_ref()) {
+            let tmp1 = x1.get_val().get("v").unwrap_or(&0.0).clone();
+            let tmp2 = x2.get_val().get("v").unwrap_or(&0.0).clone();
+            if tmp1 < tmp2 {
+                start = MeasurementType::voltage(tmp1.clone());
+                end = MeasurementType::voltage(tmp2.clone());
+            } else {
+                start = MeasurementType::voltage(tmp2.clone());
+                end = MeasurementType::voltage(tmp1.clone());
+            }
+            if let Some(l) = self.line.as_ref() {
+                let _res1 = self
+                    .plot
+                    .push((tmp1, l.get_corresponding_value(start).unwrap()));
+                let _res2 = self
+                    .plot
+                    .push((tmp2, l.get_corresponding_value(end).unwrap()));
+            }
+        }
     }
 
-
     /*
-      -=-=-=-=-=-  Getters and Setters -=-=-=-=-=-=-
-     */
+     -=-=-=-=-=-  Getters and Setters -=-=-=-=-=-=-
+    */
 
-    pub fn get_test_point(&self, v: MeasurementType) -> Result<f64,()> {
+    pub fn get_test_point(&self, v: MeasurementType) -> Result<f64, ()> {
         let line = self.line.as_ref().ok_or(())?;
         line.get_corresponding_value(v)
-
     }
     // Get tuple with (m,b) from line
     pub fn get_line_val(&self) -> String {
@@ -126,10 +149,9 @@ impl App {
 
     /*
      *  App control functions. The App is drivern by main by calling update_state.
-     *  Update state will use different control flow depending on the curren mode  
+     *  Update state will use different control flow depending on the curren mode
      */
 
-    
     // Update the status we should call differnt functions based on the modes
     pub fn update_state(&mut self) -> Result<(), ()> {
         match self.mode {
@@ -144,7 +166,7 @@ impl App {
     /*
      * The following functions are called by update_state depending on the mode. They will listen for keypress
      * by calling the get_key_press function  then handle the keypress accodringly
-     */ 
+     */
 
     /*
      * MODE = EditingValue

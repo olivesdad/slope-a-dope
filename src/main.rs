@@ -23,7 +23,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut stderr = io::stderr();
     execute!(stderr, EnterAlternateScreen)?;
 
-
     // elements
     let backend = CrosstermBackend::new(stderr);
     let mut terminal = Terminal::new(backend)?;
