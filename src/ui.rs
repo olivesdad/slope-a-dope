@@ -10,7 +10,10 @@ use ratatui::{
     Frame,
 };
 
-use crate::app::{App, CurrentlyEditing, Mode, ScreenID};
+use crate::{
+    app::{App, CurrentlyEditing, Mode, ScreenID},
+    calculator::MeasurementType,
+};
 
 pub fn ui(f: &mut Frame, app: &App) {
     // Draw all the things
@@ -65,8 +68,6 @@ pub fn ui(f: &mut Frame, app: &App) {
     let mut sim_block = make_block(" Test function ");
     let footer_block = make_block(" Current Mode ");
 
-    // ------ DYNAMIC RENDERED --------
-
     // get inner blocks for P1, P2, and sim
     // [P1]
     let p1_inner = p1_block.inner(p1_area);
@@ -85,6 +86,19 @@ pub fn ui(f: &mut Frame, app: &App) {
     let mut p2_v_block = make_block(" p2 Voltage ");
     let mut p2_p_block = make_block(" p2 Physical ");
 
+    // Get inner blocks for test section
+    let sim_inner = sim_block.inner(sim_area);
+    let test_values = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(sim_inner);
+
+    // Blocks to render the sim values in
+    // will be rendered to the rects in test_values
+    let test_v_block = make_block(" Voltage ");
+    let test_p_block = make_block(" Pysical ");
+
+    // ------ DYNAMIC RENDERED --------
     // Color blocks for slector
     match app.get_mode() {
         Mode::Select => match app.get_current_screen() {
@@ -169,6 +183,40 @@ pub fn ui(f: &mut Frame, app: &App) {
         _ => {}
     }
 
+    let mut test_v_text = make_paragraph("", test_v_block.clone());
+    let mut test_p_text = make_paragraph("", test_p_block.clone());
+
+
+    // Make paragraphs for tester if were holidng a testing value
+    if let Some(testing_value) = app.testing_value.as_ref() {
+        if let Some(line) = app.line.as_ref() {
+            if let Some((_, _)) = line.get_val() {
+                if let Ok(calculated_value) = line.get_corresponding_value(&testing_value) {
+                    match testing_value {
+                        MeasurementType::physical(phys) => {
+                            // were using a physicaly input so we need to calc the other one
+                             test_p_text = Paragraph::new(format!("{:.4}", phys.clone()))
+                                .alignment(Alignment::Center)
+                                .block(test_p_block);
+                            test_v_text = Paragraph::new(format!("{:.4}", calculated_value))
+                                .alignment(Alignment::Center)
+                                .block(test_v_block);
+                        }
+                        MeasurementType::voltage(volt) => {
+                             test_v_text = Paragraph::new(format!("{:.4}", volt.clone()))
+                                .alignment(Alignment::Center)
+                                .block(test_v_block);
+                            test_p_text = Paragraph::new(format!("{:.4}", calculated_value))
+                                .alignment(Alignment::Center)
+                                .block(test_p_block);
+
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Make paragraphs for [P1] [P2]
     if let Some(points) = app.get_points() {
         // Determine if we should use the temp_point or the stored p1 and p2 values
@@ -212,6 +260,10 @@ pub fn ui(f: &mut Frame, app: &App) {
         // [P2]
         let p2_v_text = make_paragraph(&p2_v_str, p2_v_block);
         let p2_p_text = make_paragraph(&p2_p_str, p2_p_block);
+
+        // [TESTER]]
+        f.render_widget(test_v_text, test_values[0]);
+        f.render_widget(test_p_text, test_values[1]);
 
         // render
         f.render_widget(p1_block, p1_area);

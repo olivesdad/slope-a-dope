@@ -89,7 +89,7 @@ impl Line {
     }
 
     // pub fn to take a value of type v or p and
-    pub fn get_corresponding_value(&self, value: MeasurementType) -> Result<(f64), ()> {
+    pub fn get_corresponding_value(&self, value: &MeasurementType) -> Result<(f64), ()> {
         if let (Some(m), Some(b)) = (self.slope.as_ref(), self.intercept.as_ref()) {
             match value {
                 MeasurementType::physical(y) => return Ok((y - b) / m),
@@ -163,7 +163,7 @@ mod tests {
         assert_eq!(0.0, line.intercept.unwrap());
         assert_eq!(
             5.0,
-            line.get_corresponding_value(crate::calculator::MeasurementType::physical(5.0))
+            line.get_corresponding_value(&crate::calculator::MeasurementType::physical(5.0))
                 .unwrap()
         );
     }

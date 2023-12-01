@@ -8,9 +8,10 @@ use crate::calculator::{Line, MeasurementType, Point};
 pub struct App {
     p1: Option<Point>,
     p2: Option<Point>,
-    line: Option<Line>,
+    pub line: Option<Line>,
     current_screen: ScreenID,
     mode: Mode,
+    pub testing_value: Option<MeasurementType>,
     currently_editing: Option<CurrentlyEditing>,
     temp_point: Option<String>,
     plot: Vec<(f64, f64)>,
@@ -41,6 +42,7 @@ impl App {
             line: None,
             current_screen: ScreenID::P1,
             mode: Mode::Select,
+            testing_value: Some(MeasurementType::physical(50.0)),
             currently_editing: None,
             temp_point: None,
             plot: Vec::new(),
@@ -89,10 +91,10 @@ impl App {
             if let Some(l) = self.line.as_ref() {
                 let _res1 = self
                     .plot
-                    .push((tmp1, l.get_corresponding_value(start).unwrap()));
+                    .push((tmp1, l.get_corresponding_value(&start).unwrap()));
                 let _res2 = self
                     .plot
-                    .push((tmp2, l.get_corresponding_value(end).unwrap()));
+                    .push((tmp2, l.get_corresponding_value(&end).unwrap()));
             }
         }
     }
@@ -103,7 +105,7 @@ impl App {
 
     pub fn get_test_point(&self, v: MeasurementType) -> Result<f64, ()> {
         let line = self.line.as_ref().ok_or(())?;
-        line.get_corresponding_value(v)
+        line.get_corresponding_value(&v)
     }
     // Get tuple with (m,b) from line
     pub fn get_line_val(&self) -> String {
