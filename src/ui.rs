@@ -186,7 +186,6 @@ pub fn ui(f: &mut Frame, app: &App) {
     let mut test_v_text = make_paragraph("", test_v_block.clone());
     let mut test_p_text = make_paragraph("", test_p_block.clone());
 
-
     // Make paragraphs for tester if were holidng a testing value
     if let Some(testing_value) = app.testing_value.as_ref() {
         if let Some(line) = app.line.as_ref() {
@@ -195,7 +194,7 @@ pub fn ui(f: &mut Frame, app: &App) {
                     match testing_value {
                         MeasurementType::physical(phys) => {
                             // were using a physicaly input so we need to calc the other one
-                             test_p_text = Paragraph::new(format!("{:.4}", phys.clone()))
+                            test_p_text = Paragraph::new(format!("{:.4}", phys.clone()))
                                 .alignment(Alignment::Center)
                                 .block(test_p_block);
                             test_v_text = Paragraph::new(format!("{:.4}", calculated_value))
@@ -203,13 +202,12 @@ pub fn ui(f: &mut Frame, app: &App) {
                                 .block(test_v_block);
                         }
                         MeasurementType::voltage(volt) => {
-                             test_v_text = Paragraph::new(format!("{:.4}", volt.clone()))
+                            test_v_text = Paragraph::new(format!("{:.4}", volt.clone()))
                                 .alignment(Alignment::Center)
                                 .block(test_v_block);
                             test_p_text = Paragraph::new(format!("{:.4}", calculated_value))
                                 .alignment(Alignment::Center)
                                 .block(test_p_block);
-
                         }
                     }
                 }
