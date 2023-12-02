@@ -42,7 +42,7 @@ impl App {
             line: None,
             current_screen: ScreenID::P1,
             mode: Mode::Select,
-            testing_value: Some(MeasurementType::physical(50.0)),
+            testing_value: None,
             currently_editing: None,
             temp_point: None,
             plot: Vec::new(),
