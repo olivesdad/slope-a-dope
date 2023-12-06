@@ -95,8 +95,8 @@ pub fn ui(f: &mut Frame, app: &App) {
 
     // Blocks to render the sim values in
     // will be rendered to the rects in test_values
-    let test_v_block = make_block(" Voltage ");
-    let test_p_block = make_block(" Pysical ");
+    let mut test_v_block = make_block(" Voltage ");
+    let mut test_p_block = make_block(" Pysical ");
 
     // ------ DYNAMIC RENDERED --------
     // Color blocks for slector
@@ -148,6 +148,22 @@ pub fn ui(f: &mut Frame, app: &App) {
             }
             ScreenID::Tester => {
                 sim_block = sim_block.style(Style::default().fg(Color::Green));
+                if let Some(point_value) = app.get_currently_editing() {
+                    match point_value {
+                        crate::app::CurrentlyEditing::Voltage => {
+                            //currently editing voltage need to color it yellow
+                            test_v_block =
+                                test_v_block.style(Style::default().fg(Color::LightMagenta))
+                        }
+                        crate::app::CurrentlyEditing::Physical => {
+                            //currently editing voltage need to color it yellow
+                            test_p_block =
+                                test_p_block.style(Style::default().fg(Color::LightMagenta))
+                        }
+                    }
+                } else {
+                    test_p_block = test_p_block.style(Style::default().fg(Color::Red));
+                }
             }
         },
         // Handle coloring and editng values in EditValue mode
@@ -182,6 +198,10 @@ pub fn ui(f: &mut Frame, app: &App) {
         // Color for editingValue
         _ => {}
     }
+    // Render Outer Blocks here to not overwrite inner colors and stuff
+    f.render_widget(sim_block, sim_area);
+    f.render_widget(p1_block, p1_area);
+    f.render_widget(p2_block, p2_area);
 
     let mut test_v_text = make_paragraph("", test_v_block.clone());
     let mut test_p_text = make_paragraph("", test_p_block.clone());
@@ -264,15 +284,12 @@ pub fn ui(f: &mut Frame, app: &App) {
         f.render_widget(test_p_text, test_values[1]);
 
         // render
-        f.render_widget(p1_block, p1_area);
-        f.render_widget(p2_block, p2_area);
+
         f.render_widget(p1_v_text, p1_contents[0]);
         f.render_widget(p1_p_text, p1_contents[1]);
         f.render_widget(p2_v_text, p2_contents[0]);
         f.render_widget(p2_p_text, p2_contents[1]);
     } else {
-        f.render_widget(p1_block, p1_area);
-        f.render_widget(p2_block, p2_area);
         f.render_widget(p1_p_block, p1_contents[0]);
         f.render_widget(p1_v_block, p1_contents[1]);
         f.render_widget(p2_p_block, p2_contents[0]);
@@ -320,7 +337,6 @@ pub fn ui(f: &mut Frame, app: &App) {
     //  ---- ----- Render things --- ----- -----
     f.render_widget(title_paragrah, title_area);
     f.render_widget(help_block, help_area);
-    f.render_widget(sim_block, sim_area);
 
     f.render_widget(footer_text, footer_area);
 }
