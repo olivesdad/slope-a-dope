@@ -82,11 +82,11 @@ impl App {
             let tmp1 = x1.get_val().get("v").unwrap_or(&0.0).clone();
             let tmp2 = x2.get_val().get("v").unwrap_or(&0.0).clone();
             if tmp1 < tmp2 {
-                start = MeasurementType::voltage(tmp1.clone());
-                end = MeasurementType::voltage(tmp2.clone());
+                start = MeasurementType::Voltage(tmp1.clone());
+                end = MeasurementType::Voltage(tmp2.clone());
             } else {
-                start = MeasurementType::voltage(tmp2.clone());
-                end = MeasurementType::voltage(tmp1.clone());
+                start = MeasurementType::Voltage(tmp2.clone());
+                end = MeasurementType::Voltage(tmp1.clone());
             }
             if let Some(l) = self.line.as_ref() {
                 let _res1 = self
@@ -103,10 +103,6 @@ impl App {
      -=-=-=-=-=-  Getters and Setters -=-=-=-=-=-=-
     */
 
-    pub fn get_test_point(&self, v: MeasurementType) -> Result<f64, ()> {
-        let line = self.line.as_ref().ok_or(())?;
-        line.get_corresponding_value(&v)
-    }
     // Get tuple with (m,b) from line
     pub fn get_line_val(&self) -> String {
         if let Some(line) = &self.line {
@@ -221,7 +217,7 @@ impl App {
                                             match self.current_screen {
                                                 ScreenID::Tester => {
                                                     self.testing_value =
-                                                        Some(MeasurementType::physical(parsed));
+                                                        Some(MeasurementType::Physical(parsed));
                                                 }
                                                 _ => {
                                                     if let Some(p) = point_ref {
@@ -236,7 +232,7 @@ impl App {
                                             match self.current_screen {
                                                 ScreenID::Tester => {
                                                     self.testing_value =
-                                                        Some(MeasurementType::voltage(parsed));
+                                                        Some(MeasurementType::Voltage(parsed));
                                                 }
                                                 _ => {
                                                     if let Some(p) = point_ref {

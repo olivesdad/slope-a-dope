@@ -266,7 +266,7 @@ pub fn ui(f: &mut Frame, app: &App) {
                 if let Some((_, _)) = line.get_val() {
                     if let Ok(calculated_value) = line.get_corresponding_value(&testing_value) {
                         match testing_value {
-                            MeasurementType::physical(phys) => {
+                            MeasurementType::Physical(phys) => {
                                 // were using a physicaly input so we need to calc the other one
                                 test_p_text = Paragraph::new(format!("{:.4}", phys.clone()))
                                     .alignment(Alignment::Center)
@@ -275,7 +275,7 @@ pub fn ui(f: &mut Frame, app: &App) {
                                     .alignment(Alignment::Center)
                                     .block(test_v_block);
                             }
-                            MeasurementType::voltage(volt) => {
+                            MeasurementType::Voltage(volt) => {
                                 test_v_text = Paragraph::new(format!("{:.4}", volt.clone()))
                                     .alignment(Alignment::Center)
                                     .block(test_v_block);
