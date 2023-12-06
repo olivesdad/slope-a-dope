@@ -191,7 +191,16 @@ pub fn ui(f: &mut Frame, app: &App) {
                             p2_v_block = p2_v_block.style(Style::default().fg(Color::Green))
                         }
                     },
-                    ScreenID::Tester => {}
+                    ScreenID::Tester => match x {
+                        CurrentlyEditing::Physical => {
+                            sim_block = sim_block.style(Style::default().fg(Color::Green));
+                            test_p_block = test_p_block.style(Style::default().fg(Color::Green))
+                        }
+                        CurrentlyEditing::Voltage => {
+                            sim_block = sim_block.style(Style::default().fg(Color::Green));
+                            test_v_block = test_v_block.style(Style::default().fg(Color::Green))
+                        }
+                    },
                 }
             }
         }
@@ -206,36 +215,7 @@ pub fn ui(f: &mut Frame, app: &App) {
     let mut test_v_text = make_paragraph("", test_v_block.clone());
     let mut test_p_text = make_paragraph("", test_p_block.clone());
 
-    // Make paragraphs for tester if were holidng a testing value
-    if let Some(testing_value) = app.testing_value.as_ref() {
-        if let Some(line) = app.line.as_ref() {
-            if let Some((_, _)) = line.get_val() {
-                if let Ok(calculated_value) = line.get_corresponding_value(&testing_value) {
-                    match testing_value {
-                        MeasurementType::physical(phys) => {
-                            // were using a physicaly input so we need to calc the other one
-                            test_p_text = Paragraph::new(format!("{:.4}", phys.clone()))
-                                .alignment(Alignment::Center)
-                                .block(test_p_block);
-                            test_v_text = Paragraph::new(format!("{:.4}", calculated_value))
-                                .alignment(Alignment::Center)
-                                .block(test_v_block);
-                        }
-                        MeasurementType::voltage(volt) => {
-                            test_v_text = Paragraph::new(format!("{:.4}", volt.clone()))
-                                .alignment(Alignment::Center)
-                                .block(test_v_block);
-                            test_p_text = Paragraph::new(format!("{:.4}", calculated_value))
-                                .alignment(Alignment::Center)
-                                .block(test_p_block);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Make paragraphs for [P1] [P2]
+    // Make paragraphs for [P1] [P2] [Tester]
     if let Some(points) = app.get_points() {
         // Determine if we should use the temp_point or the stored p1 and p2 values
         // First set the point values
@@ -243,6 +223,7 @@ pub fn ui(f: &mut Frame, app: &App) {
         let mut p1_p_str = format!("{:.4}", points.0.get("p").cloned().unwrap_or(0.0));
         let mut p2_v_str = format!("{:.4}", points.1.get("v").cloned().unwrap_or(990.0));
         let mut p2_p_str = format!("{:.4}", points.1.get("p").cloned().unwrap_or(990.0));
+
         // Then overwrite as needed for editingvalue mode
         if let Mode::EditingValue = app.get_mode() {
             if let Some(x) = app.get_currently_editing() {
@@ -264,9 +245,46 @@ pub fn ui(f: &mut Frame, app: &App) {
                         }
                     },
                     ScreenID::Tester => match x {
-                        CurrentlyEditing::Physical => {}
-                        CurrentlyEditing::Voltage => {}
+                        CurrentlyEditing::Physical => {
+                            test_p_text = Paragraph::new(app.get_temp_point())
+                                .alignment(Alignment::Center)
+                                .block(test_p_block.clone());
+                        }
+                        CurrentlyEditing::Voltage => {
+                            test_v_text = Paragraph::new(app.get_temp_point())
+                                .alignment(Alignment::Center)
+                                .block(test_v_block.clone());
+                        }
                     },
+                }
+            }
+        }
+
+        // Make paragraphs for tester if were holidng a testing value
+        if let Some(testing_value) = app.testing_value.as_ref() {
+            if let Some(line) = app.line.as_ref() {
+                if let Some((_, _)) = line.get_val() {
+                    if let Ok(calculated_value) = line.get_corresponding_value(&testing_value) {
+                        match testing_value {
+                            MeasurementType::physical(phys) => {
+                                // were using a physicaly input so we need to calc the other one
+                                test_p_text = Paragraph::new(format!("{:.4}", phys.clone()))
+                                    .alignment(Alignment::Center)
+                                    .block(test_p_block);
+                                test_v_text = Paragraph::new(format!("{:.4}", calculated_value))
+                                    .alignment(Alignment::Center)
+                                    .block(test_v_block);
+                            }
+                            MeasurementType::voltage(volt) => {
+                                test_v_text = Paragraph::new(format!("{:.4}", volt.clone()))
+                                    .alignment(Alignment::Center)
+                                    .block(test_v_block);
+                                test_p_text = Paragraph::new(format!("{:.4}", calculated_value))
+                                    .alignment(Alignment::Center)
+                                    .block(test_p_block);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -279,12 +297,11 @@ pub fn ui(f: &mut Frame, app: &App) {
         let p2_v_text = make_paragraph(&p2_v_str, p2_v_block);
         let p2_p_text = make_paragraph(&p2_p_str, p2_p_block);
 
-        // [TESTER]]
+        // [TESTER]
         f.render_widget(test_v_text, test_values[0]);
         f.render_widget(test_p_text, test_values[1]);
 
         // render
-
         f.render_widget(p1_v_text, p1_contents[0]);
         f.render_widget(p1_p_text, p1_contents[1]);
         f.render_widget(p2_v_text, p2_contents[0]);

@@ -209,7 +209,7 @@ impl App {
                                 point_ref = self.p2.as_mut();
                             }
 
-                            _ => {} // TODO: Impliment tester
+                            ScreenID::Tester => {} // TODO: Impliment tester
                         }
                         // Which value of the point
                         if let Some(ce) = self.currently_editing.as_ref() {
@@ -218,18 +218,36 @@ impl App {
                                 if let Ok(parsed) = val.parse::<f64>() {
                                     match ce {
                                         CurrentlyEditing::Physical => {
-                                            if let Some(p) = point_ref {
-                                                p.set_physical(parsed);
+                                            match self.current_screen {
+                                                ScreenID::Tester => {
+                                                    self.testing_value =
+                                                        Some(MeasurementType::physical(parsed));
+                                                }
+                                                _ => {
+                                                    if let Some(p) = point_ref {
+                                                        p.set_physical(parsed);
+                                                        // Recalculate the line
+                                                        self.update_line();
+                                                    }
+                                                }
                                             }
                                         }
                                         CurrentlyEditing::Voltage => {
-                                            if let Some(p) = point_ref {
-                                                p.set_voltage(parsed);
+                                            match self.current_screen {
+                                                ScreenID::Tester => {
+                                                    self.testing_value =
+                                                        Some(MeasurementType::voltage(parsed));
+                                                }
+                                                _ => {
+                                                    if let Some(p) = point_ref {
+                                                        p.set_voltage(parsed);
+                                                        // Recalculate the line
+                                                        self.update_line();
+                                                    }
+                                                }
                                             }
                                         }
                                     }
-                                    // Recalculate the line
-                                    self.update_line();
                                 }
                             }
                         }
@@ -267,6 +285,12 @@ impl App {
                         self.mode = Mode::Select;
                     }
                     KeyCode::Enter => {
+                        match self.current_screen {
+                            ScreenID::Tester => {
+                                self.testing_value = None;
+                            }
+                            _ => {}
+                        }
                         self.mode = Mode::EditingValue;
                     }
                     KeyCode::Down => match self.current_screen {
