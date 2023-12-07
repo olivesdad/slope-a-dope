@@ -91,10 +91,10 @@ impl App {
             if let Some(l) = self.line.as_ref() {
                 let _res1 = self
                     .plot
-                    .push((tmp1, l.get_corresponding_value(&start).unwrap()));
+                    .push((tmp2, l.get_corresponding_value(&start).unwrap()));
                 let _res2 = self
                     .plot
-                    .push((tmp2, l.get_corresponding_value(&end).unwrap()));
+                    .push((tmp1, l.get_corresponding_value(&end).unwrap()));
             }
         }
     }
@@ -102,7 +102,10 @@ impl App {
     /*
      -=-=-=-=-=-  Getters and Setters -=-=-=-=-=-=-
     */
-
+    // Get vector slice for plot
+    pub fn get_plot_data(&self) -> &Vec<(f64, f64)> {
+        self.plot.as_ref()
+    }
     // Get tuple with (m,b) from line
     pub fn get_line_val(&self) -> String {
         if let Some(line) = &self.line {
@@ -390,3 +393,5 @@ fn get_key_press() -> Option<KeyCode> {
         }
     }
 }
+
+// Make a chart

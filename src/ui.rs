@@ -328,6 +328,8 @@ pub fn ui(f: &mut Frame, app: &App) {
         Paragraph::new(app.get_line_val()).alignment(Alignment::Center),
         calc_contents[0],
     );
+    // [Chart]
+    f.render_widget(make_chart(app), calc_contents[1]);
 
     // ---- STATIC Colors -----
 
@@ -370,4 +372,28 @@ pub fn make_block<'a>(s: &'a str) -> Block<'a> {
 
 pub fn make_paragraph<'a>(s: &'a str, b: Block<'a>) -> Paragraph<'a> {
     Paragraph::new(s).block(b).alignment(Alignment::Center)
+}
+
+// make chart
+pub fn make_chart<'a>(app: &'a App) -> Chart<'a> {
+    let datasets = vec![Dataset::default()
+        .graph_type(GraphType::Line)
+        .style(Style::default().fg(Color::Green))
+        .data(app.get_plot_data().as_slice())];
+
+    Chart::new(datasets)
+        .x_axis(
+             Axis::default()
+            .title(Span::styled("Voltage", Style::default().fg(Color::Red)))
+            .style(Style::default())
+            .bounds([-1.0, 10.0])
+            .labels(["0", "5", "10"].iter().cloned().map(Span::from).collect())
+            )
+        .y_axis(
+            Axis::default()
+            .title(Span::styled("Physical", Style::default().fg(Color::Red)))
+            .style(Style::default())
+            .bounds([-1.0, 100.0])
+            .labels(["0", "50", "100"].iter().cloned().map(Span::from).collect())
+        )
 }
