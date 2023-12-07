@@ -383,17 +383,17 @@ pub fn make_chart<'a>(app: &'a App) -> Chart<'a> {
 
     Chart::new(datasets)
         .x_axis(
-             Axis::default()
-            .title(Span::styled("Voltage", Style::default().fg(Color::Red)))
-            .style(Style::default())
-            .bounds([-1.0, 10.0])
-            .labels(["0", "5", "10"].iter().cloned().map(Span::from).collect())
-            )
+            Axis::default()
+                .title(Span::styled("Voltage", Style::default().fg(Color::Red)))
+                .style(Style::default())
+                .bounds([-1.0, 10.0])
+                .labels(["0", "5", "10"].iter().cloned().map(Span::from).collect()),
+        )
         .y_axis(
             Axis::default()
-            .title(Span::styled("Physical", Style::default().fg(Color::Red)))
-            .style(Style::default())
-            .bounds([-1.0, 100.0])
-            .labels(["0", "50", "100"].iter().cloned().map(Span::from).collect())
+                .title(Span::styled("Physical", Style::default().fg(Color::Red)))
+                .style(Style::default())
+                .bounds([-1.0, 100.0])
+                .labels(["0", "50", "100"].iter().cloned().map(Span::from).collect()),
         )
 }
