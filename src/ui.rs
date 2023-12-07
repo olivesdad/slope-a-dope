@@ -3,10 +3,7 @@ use ratatui::{
     prelude::Alignment,
     style::{Color, Modifier, Style, Stylize},
     text::{Span, Text},
-    widgets::{
-        block::title, Axis, Block, BorderType, Borders, Chart, Dataset, Gauge, GraphType, Padding,
-        Paragraph, Wrap,
-    },
+    widgets::{Axis, Block, BorderType, Borders, Chart, Dataset, GraphType, Paragraph},
     Frame,
 };
 
