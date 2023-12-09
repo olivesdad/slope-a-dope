@@ -1,9 +1,16 @@
 use std::collections::HashMap;
-
+use num_traits::Num;
 use crossterm::event;
 use crossterm::event::{Event, KeyCode};
 
 use crate::calculator::{Line, MeasurementType, Point};
+
+pub struct Bounds {
+    y_labels: Vec<String>,
+    y_bounds: (f64,f64),
+    x_labels: Vec<String>,
+    x_bounds: (f64,f64),
+}
 
 pub struct App {
     p1: Option<Point>,
@@ -105,6 +112,31 @@ impl App {
     // Get vector slice for plot
     pub fn get_plot_data(&self) -> &Vec<(f64, f64)> {
         self.plot.as_ref()
+    }
+
+    pub fn get_bounds(&self) -> Bounds {
+        if self.plot.len() > 0 {
+            let xlabel: Vec<String>= Vec::new();
+            let ylabel: Vec<String> = Vec::new();
+            let x_min_max = get_min_max(self.plot[0].0.clone(), self.plot[1].0.clone());
+            let y_min_max = get_min_max(self.plot[0].1.clone(), self.plot[1].1.clone());
+            
+
+            // place holder 
+            Bounds {
+                x_bounds: (0.0, 100.0),
+                x_labels: vec!["0".to_string(), "10".to_string()],
+                y_bounds: (0.0, 100.0),
+                y_labels: vec!["0".to_string(), "100".to_string()],
+            }
+        } else {
+            Bounds {
+                x_bounds: (0.0, 100.0),
+                x_labels: vec!["0".to_string(), "10".to_string()],
+                y_bounds: (0.0, 100.0),
+                y_labels: vec!["0".to_string(), "100".to_string()],
+            }
+        }
     }
     // Get tuple with (m,b) from line
     pub fn get_line_val(&self) -> String {
@@ -394,4 +426,14 @@ fn get_key_press() -> Option<KeyCode> {
     }
 }
 
-// Make a chart
+
+// get max
+pub fn get_min_max<T> (a: T, b: T) -> (T,T) 
+where T:Num + PartialOrd {
+    if a >= b {
+         (b,a)
+    } else {
+         (a,b)
+    } 
+}
+
