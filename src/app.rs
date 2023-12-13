@@ -1,13 +1,13 @@
-use std::collections::HashMap;
-use num_traits::Num;
 use crossterm::event;
 use crossterm::event::{Event, KeyCode};
+use num_traits::Num;
+use std::collections::HashMap;
 
 use crate::calculator::{Line, MeasurementType, Point};
 
 pub struct Bounds {
-    labels: Vec<String>,
-    bounds: (i32,i32),
+    pub labels: Vec<String>,
+    pub bounds: (f64, f64),
 }
 
 pub struct App {
@@ -118,33 +118,44 @@ impl App {
      * boundsounds: (f64,f64),
      */
     pub fn get_bounds(&self) -> Bounds {
-
         // If the plot vector has points then generate a bounds struct
         if self.plot.len() > 0 {
-            let xlabel: Vec<String>= Vec::new();
-            let ylabel: Vec<String> = Vec::new();
-            // structures the bounds 
-            let  x_min_max = get_min_max(self.plot[0].0.clone(), self.plot[1].0.clone());
-            let  y_min_max = get_min_max(self.plot[0].1.clone(), self.plot[1].1.clone());
-            
-            // maybe we should find the lowest of the 2 
+            let mut labels: Vec<String> = Vec::new();
+
+            // structures the bounds
+            let x_min_max = get_min_max(self.plot[0].0.clone(), self.plot[1].0.clone());
+            let y_min_max = get_min_max(self.plot[0].1.clone(), self.plot[1].1.clone());
+
+            // maybe we should find the lowest of the 2
             let mut min = get_min_max(x_min_max.clone().0, y_min_max.0).clone().0 as i32;
             let mut max = get_min_max(y_min_max.1, x_min_max.1).1 as i32;
 
             // get label top
             max = (max + 5) - (max % 5);
-            min = (min -5) - (min % 5);
+            min = (min - 5) - (min % 5);
+            let max = max as f64;
+            let min = min as f64;
+            // push labels
+            labels.push(min.to_string());
 
-            // place holder 
+            let mut i = 1;
+            let segments = 4;
+            let gap = (max - min) / segments as f64;
+            while i < segments {
+                labels.push((min + gap * i as f64).to_string());
+                i = i + 1;
+            }
+
+            labels.push(max.to_string());
+            // place holder
             Bounds {
-                bounds: (min,max),
-                labels: vec!["0".to_string(), "10".to_string()],
-
+                bounds: (min, max),
+                labels: labels,
             }
         } else {
             // If the thing is empty just use a default bounds struct
             Bounds {
-                bounds: (0, 100),
+                bounds: (0.0, 100.0),
                 labels: vec!["0".to_string(), "10".to_string()],
             }
         }
@@ -437,14 +448,14 @@ fn get_key_press() -> Option<KeyCode> {
     }
 }
 
-
 // get max
-pub fn get_min_max<T> (a: T, b: T) -> (T,T) 
-where T:Num + PartialOrd {
+pub fn get_min_max<T>(a: T, b: T) -> (T, T)
+where
+    T: Num + PartialOrd,
+{
     if a >= b {
-         (b,a)
+        (b, a)
     } else {
-         (a,b)
-    } 
+        (a, b)
+    }
 }
-

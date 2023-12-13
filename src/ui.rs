@@ -2,6 +2,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     prelude::Alignment,
     style::{Color, Modifier, Style, Stylize},
+    symbols::Marker,
     text::{Span, Text},
     widgets::{Axis, Block, BorderType, Borders, Chart, Dataset, GraphType, Paragraph},
     Frame,
@@ -373,24 +374,49 @@ pub fn make_paragraph<'a>(s: &'a str, b: Block<'a>) -> Paragraph<'a> {
 
 // make chart
 pub fn make_chart<'a>(app: &'a App) -> Chart<'a> {
-    let datasets = vec![Dataset::default()
+    let mut datasets = vec![Dataset::default()
         .graph_type(GraphType::Line)
         .style(Style::default().fg(Color::Green))
         .data(app.get_plot_data().as_slice())];
+
+    /*     let mut temp: Box<[(f64, f64)]> = Box::new([(0.0, 0.0)]);
+    if let Some(test_point) = app.testing_value.as_ref() {
+        if let Some(l) = app.line.as_ref() {
+            if let Ok(value) = l.get_corresponding_value(test_point) {
+                match test_point {
+                    MeasurementType::Physical(y) => {
+                        temp = Box::new([(value, y.clone())]);
+                    }
+                    MeasurementType::Voltage(x) => {
+                        temp = Box::new([(x.clone(), value)]);
+                    }
+                }
+            }
+        }
+        datasets.push(
+            Dataset::default()
+            .graph_type(GraphType::Scatter)
+            .style(Style::default().fg(Color::LightYellow))
+            .marker(Marker::Block)
+            .data(&*temp)
+        );
+    } */
+
+    let bounds = app.get_bounds();
 
     Chart::new(datasets)
         .x_axis(
             Axis::default()
                 .title(Span::styled("Voltage", Style::default().fg(Color::Red)))
                 .style(Style::default())
-                .bounds([-1.0, 10.0])
-                .labels(["0", "5", "10"].iter().cloned().map(Span::from).collect()),
+                .bounds([bounds.bounds.0.clone(), bounds.bounds.1.clone()])
+                .labels(bounds.labels[..].iter().cloned().map(Span::from).collect()),
         )
         .y_axis(
             Axis::default()
                 .title(Span::styled("Physical", Style::default().fg(Color::Red)))
                 .style(Style::default())
-                .bounds([-1.0, 100.0])
-                .labels(["0", "50", "100"].iter().cloned().map(Span::from).collect()),
+                .bounds([bounds.bounds.0.clone(), bounds.bounds.1.clone()])
+                .labels(bounds.labels[..].iter().cloned().map(Span::from).collect()),
         )
 }
