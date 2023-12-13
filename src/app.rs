@@ -6,10 +6,8 @@ use crossterm::event::{Event, KeyCode};
 use crate::calculator::{Line, MeasurementType, Point};
 
 pub struct Bounds {
-    y_labels: Vec<String>,
-    y_bounds: (f64,f64),
-    x_labels: Vec<String>,
-    x_bounds: (f64,f64),
+    labels: Vec<String>,
+    bounds: (i32,i32),
 }
 
 pub struct App {
@@ -114,27 +112,40 @@ impl App {
         self.plot.as_ref()
     }
 
+    // Function to return a bounds struct to be used to set actual bounds and label axes
+    /*
+     * labels: Vec<String>,
+     * boundsounds: (f64,f64),
+     */
     pub fn get_bounds(&self) -> Bounds {
+
+        // If the plot vector has points then generate a bounds struct
         if self.plot.len() > 0 {
             let xlabel: Vec<String>= Vec::new();
             let ylabel: Vec<String> = Vec::new();
-            let x_min_max = get_min_max(self.plot[0].0.clone(), self.plot[1].0.clone());
-            let y_min_max = get_min_max(self.plot[0].1.clone(), self.plot[1].1.clone());
+            // structures the bounds 
+            let  x_min_max = get_min_max(self.plot[0].0.clone(), self.plot[1].0.clone());
+            let  y_min_max = get_min_max(self.plot[0].1.clone(), self.plot[1].1.clone());
             
+            // maybe we should find the lowest of the 2 
+            let mut min = get_min_max(x_min_max.clone().0, y_min_max.0).clone().0 as i32;
+            let mut max = get_min_max(y_min_max.1, x_min_max.1).1 as i32;
+
+            // get label top
+            max = (max + 5) - (max % 5);
+            min = (min -5) - (min % 5);
 
             // place holder 
             Bounds {
-                x_bounds: (0.0, 100.0),
-                x_labels: vec!["0".to_string(), "10".to_string()],
-                y_bounds: (0.0, 100.0),
-                y_labels: vec!["0".to_string(), "100".to_string()],
+                bounds: (min,max),
+                labels: vec!["0".to_string(), "10".to_string()],
+
             }
         } else {
+            // If the thing is empty just use a default bounds struct
             Bounds {
-                x_bounds: (0.0, 100.0),
-                x_labels: vec!["0".to_string(), "10".to_string()],
-                y_bounds: (0.0, 100.0),
-                y_labels: vec!["0".to_string(), "100".to_string()],
+                bounds: (0, 100),
+                labels: vec!["0".to_string(), "10".to_string()],
             }
         }
     }
