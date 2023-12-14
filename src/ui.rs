@@ -377,30 +377,18 @@ pub fn make_chart<'a>(app: &'a App) -> Chart<'a> {
     let mut datasets = vec![Dataset::default()
         .graph_type(GraphType::Line)
         .style(Style::default().fg(Color::Green))
+        .marker(Marker::Braille)
         .data(app.get_plot_data().as_slice())];
 
-    /*     let mut temp: Box<[(f64, f64)]> = Box::new([(0.0, 0.0)]);
-    if let Some(test_point) = app.testing_value.as_ref() {
-        if let Some(l) = app.line.as_ref() {
-            if let Ok(value) = l.get_corresponding_value(test_point) {
-                match test_point {
-                    MeasurementType::Physical(y) => {
-                        temp = Box::new([(value, y.clone())]);
-                    }
-                    MeasurementType::Voltage(x) => {
-                        temp = Box::new([(x.clone(), value)]);
-                    }
-                }
-            }
-        }
+    if let Some(test_point) = app.get_test_series() {
         datasets.push(
             Dataset::default()
-            .graph_type(GraphType::Scatter)
-            .style(Style::default().fg(Color::LightYellow))
-            .marker(Marker::Block)
-            .data(&*temp)
+                .graph_type(GraphType::Scatter)
+                .style(Style::default().fg(Color::LightYellow))
+                .data(test_point)
+                .marker(Marker::Bar),
         );
-    } */
+    }
 
     let bounds = app.get_bounds();
 

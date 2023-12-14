@@ -19,6 +19,7 @@ pub struct App {
     pub testing_value: Option<MeasurementType>,
     currently_editing: Option<CurrentlyEditing>,
     temp_point: Option<String>,
+    test_point: Option<[(f64, f64); 1]>,
     plot: Vec<(f64, f64)>,
 }
 
@@ -45,6 +46,7 @@ impl App {
             p1: Some(Point::from((5.0, 100.0))),
             p2: Some(Point::from((0.0, 0.0))),
             line: None,
+            test_point: None,
             current_screen: ScreenID::P1,
             mode: Mode::Select,
             testing_value: None,
@@ -110,6 +112,10 @@ impl App {
     // Get vector slice for plot
     pub fn get_plot_data(&self) -> &Vec<(f64, f64)> {
         self.plot.as_ref()
+    }
+
+    pub fn get_test_series(&self) -> Option<&[(f64, f64); 1]> {
+        self.test_point.as_ref()
     }
 
     // Function to return a bounds struct to be used to set actual bounds and label axes
@@ -275,12 +281,24 @@ impl App {
                                                 ScreenID::Tester => {
                                                     self.testing_value =
                                                         Some(MeasurementType::Physical(parsed));
+                                                    // populate test_point
+                                                    if let Some(l) = self.line.as_ref() {
+                                                        self.test_point = Some([(
+                                                            l.get_corresponding_value(
+                                                                &MeasurementType::Physical(parsed),
+                                                            )
+                                                            .unwrap(),
+                                                            parsed,
+                                                        )])
+                                                    }
                                                 }
                                                 _ => {
                                                     if let Some(p) = point_ref {
                                                         p.set_physical(parsed);
                                                         // Recalculate the line
                                                         self.update_line();
+                                                        self.test_point = None;
+                                                        self.testing_value = None;
                                                     }
                                                 }
                                             }
@@ -288,14 +306,28 @@ impl App {
                                         CurrentlyEditing::Voltage => {
                                             match self.current_screen {
                                                 ScreenID::Tester => {
+                                                    // add testing value
                                                     self.testing_value =
                                                         Some(MeasurementType::Voltage(parsed));
+
+                                                    // populate test_point
+                                                    if let Some(l) = self.line.as_ref() {
+                                                        self.test_point = Some([(
+                                                            parsed,
+                                                            l.get_corresponding_value(
+                                                                &MeasurementType::Voltage(parsed),
+                                                            )
+                                                            .unwrap(),
+                                                        )])
+                                                    }
                                                 }
                                                 _ => {
                                                     if let Some(p) = point_ref {
                                                         p.set_voltage(parsed);
                                                         // Recalculate the line
                                                         self.update_line();
+                                                        self.test_point = None;
+                                                        self.testing_value = None;
                                                     }
                                                 }
                                             }
@@ -341,6 +373,7 @@ impl App {
                         match self.current_screen {
                             ScreenID::Tester => {
                                 self.testing_value = None;
+                                self.test_point = None;
                             }
                             _ => {}
                         }
