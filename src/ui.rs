@@ -1,5 +1,5 @@
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout},
     prelude::Alignment,
     style::{Color, Modifier, Style, Stylize},
     symbols::Marker,
