@@ -1,7 +1,8 @@
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
+    layout::{Constraint, Direction, Layout},
     prelude::Alignment,
     style::{Color, Modifier, Style, Stylize},
+    symbols::Marker,
     text::{Span, Text},
     widgets::{Axis, Block, BorderType, Borders, Chart, Dataset, GraphType, Paragraph},
     Frame,
@@ -373,24 +374,37 @@ pub fn make_paragraph<'a>(s: &'a str, b: Block<'a>) -> Paragraph<'a> {
 
 // make chart
 pub fn make_chart<'a>(app: &'a App) -> Chart<'a> {
-    let datasets = vec![Dataset::default()
+    let mut datasets = vec![Dataset::default()
         .graph_type(GraphType::Line)
         .style(Style::default().fg(Color::Green))
+        .marker(Marker::Braille)
         .data(app.get_plot_data().as_slice())];
+
+    if let Some(test_point) = app.get_test_series() {
+        datasets.push(
+            Dataset::default()
+                .graph_type(GraphType::Scatter)
+                .style(Style::default().fg(Color::LightYellow))
+                .data(test_point)
+                .marker(Marker::Bar),
+        );
+    }
+
+    let bounds = app.get_bounds();
 
     Chart::new(datasets)
         .x_axis(
             Axis::default()
                 .title(Span::styled("Voltage", Style::default().fg(Color::Red)))
                 .style(Style::default())
-                .bounds([-1.0, 10.0])
-                .labels(["0", "5", "10"].iter().cloned().map(Span::from).collect()),
+                .bounds([bounds.bounds.0.clone(), bounds.bounds.1.clone()])
+                .labels(bounds.labels[..].iter().cloned().map(Span::from).collect()),
         )
         .y_axis(
             Axis::default()
                 .title(Span::styled("Physical", Style::default().fg(Color::Red)))
                 .style(Style::default())
-                .bounds([-1.0, 100.0])
-                .labels(["0", "50", "100"].iter().cloned().map(Span::from).collect()),
+                .bounds([bounds.bounds.0.clone(), bounds.bounds.1.clone()])
+                .labels(bounds.labels[..].iter().cloned().map(Span::from).collect()),
         )
 }

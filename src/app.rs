@@ -1,9 +1,14 @@
-use std::collections::HashMap;
-
 use crossterm::event;
 use crossterm::event::{Event, KeyCode};
+use num_traits::Num;
+use std::collections::HashMap;
 
 use crate::calculator::{Line, MeasurementType, Point};
+
+pub struct Bounds {
+    pub labels: Vec<String>,
+    pub bounds: (f64, f64),
+}
 
 pub struct App {
     p1: Option<Point>,
@@ -14,6 +19,7 @@ pub struct App {
     pub testing_value: Option<MeasurementType>,
     currently_editing: Option<CurrentlyEditing>,
     temp_point: Option<String>,
+    test_point: Option<[(f64, f64); 1]>,
     plot: Vec<(f64, f64)>,
 }
 
@@ -40,6 +46,7 @@ impl App {
             p1: Some(Point::from((5.0, 100.0))),
             p2: Some(Point::from((0.0, 0.0))),
             line: None,
+            test_point: None,
             current_screen: ScreenID::P1,
             mode: Mode::Select,
             testing_value: None,
@@ -105,6 +112,59 @@ impl App {
     // Get vector slice for plot
     pub fn get_plot_data(&self) -> &Vec<(f64, f64)> {
         self.plot.as_ref()
+    }
+
+    pub fn get_test_series(&self) -> Option<&[(f64, f64); 1]> {
+        self.test_point.as_ref()
+    }
+
+    // Function to return a bounds struct to be used to set actual bounds and label axes
+    /*
+     * labels: Vec<String>,
+     * boundsounds: (f64,f64),
+     */
+    pub fn get_bounds(&self) -> Bounds {
+        // If the plot vector has points then generate a bounds struct
+        if self.plot.len() > 0 {
+            let mut labels: Vec<String> = Vec::new();
+
+            // structures the bounds
+            let x_min_max = get_min_max(self.plot[0].0.clone(), self.plot[1].0.clone());
+            let y_min_max = get_min_max(self.plot[0].1.clone(), self.plot[1].1.clone());
+
+            // maybe we should find the lowest of the 2
+            let mut min = get_min_max(x_min_max.clone().0, y_min_max.0).clone().0 as i32;
+            let mut max = get_min_max(y_min_max.1, x_min_max.1).1 as i32;
+
+            // get label top
+            max = (max + 5) - (max % 5);
+            min = (min - 5) - (min % 5);
+            let max = max as f64;
+            let min = min as f64;
+            // push labels
+            labels.push(min.to_string());
+
+            let mut i = 1;
+            let segments = 4;
+            let gap = (max - min) / segments as f64;
+            while i < segments {
+                labels.push((min + gap * i as f64).to_string());
+                i = i + 1;
+            }
+
+            labels.push(max.to_string());
+            // place holder
+            Bounds {
+                bounds: (min, max),
+                labels: labels,
+            }
+        } else {
+            // If the thing is empty just use a default bounds struct
+            Bounds {
+                bounds: (0.0, 100.0),
+                labels: vec!["0".to_string(), "10".to_string()],
+            }
+        }
     }
     // Get tuple with (m,b) from line
     pub fn get_line_val(&self) -> String {
@@ -221,12 +281,24 @@ impl App {
                                                 ScreenID::Tester => {
                                                     self.testing_value =
                                                         Some(MeasurementType::Physical(parsed));
+                                                    // populate test_point
+                                                    if let Some(l) = self.line.as_ref() {
+                                                        self.test_point = Some([(
+                                                            l.get_corresponding_value(
+                                                                &MeasurementType::Physical(parsed),
+                                                            )
+                                                            .unwrap(),
+                                                            parsed,
+                                                        )])
+                                                    }
                                                 }
                                                 _ => {
                                                     if let Some(p) = point_ref {
                                                         p.set_physical(parsed);
                                                         // Recalculate the line
                                                         self.update_line();
+                                                        self.test_point = None;
+                                                        self.testing_value = None;
                                                     }
                                                 }
                                             }
@@ -234,14 +306,28 @@ impl App {
                                         CurrentlyEditing::Voltage => {
                                             match self.current_screen {
                                                 ScreenID::Tester => {
+                                                    // add testing value
                                                     self.testing_value =
                                                         Some(MeasurementType::Voltage(parsed));
+
+                                                    // populate test_point
+                                                    if let Some(l) = self.line.as_ref() {
+                                                        self.test_point = Some([(
+                                                            parsed,
+                                                            l.get_corresponding_value(
+                                                                &MeasurementType::Voltage(parsed),
+                                                            )
+                                                            .unwrap(),
+                                                        )])
+                                                    }
                                                 }
                                                 _ => {
                                                     if let Some(p) = point_ref {
                                                         p.set_voltage(parsed);
                                                         // Recalculate the line
                                                         self.update_line();
+                                                        self.test_point = None;
+                                                        self.testing_value = None;
                                                     }
                                                 }
                                             }
@@ -287,6 +373,7 @@ impl App {
                         match self.current_screen {
                             ScreenID::Tester => {
                                 self.testing_value = None;
+                                self.test_point = None;
                             }
                             _ => {}
                         }
@@ -394,4 +481,14 @@ fn get_key_press() -> Option<KeyCode> {
     }
 }
 
-// Make a chart
+// get max
+pub fn get_min_max<T>(a: T, b: T) -> (T, T)
+where
+    T: Num + PartialOrd,
+{
+    if a >= b {
+        (b, a)
+    } else {
+        (a, b)
+    }
+}
