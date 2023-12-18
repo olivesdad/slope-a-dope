@@ -377,7 +377,7 @@ pub fn make_chart<'a>(app: &'a App) -> Chart<'a> {
     let mut datasets = vec![Dataset::default()
         .graph_type(GraphType::Line)
         .style(Style::default().fg(Color::Green))
-        .marker(Marker::Braille)
+        .marker(Marker::Dot)
         .data(app.get_plot_data().as_slice())];
 
     if let Some(test_point) = app.get_test_series() {
@@ -386,7 +386,7 @@ pub fn make_chart<'a>(app: &'a App) -> Chart<'a> {
                 .graph_type(GraphType::Scatter)
                 .style(Style::default().fg(Color::LightYellow))
                 .data(test_point)
-                .marker(Marker::Bar),
+                .marker(Marker::Block),
         );
     }
 

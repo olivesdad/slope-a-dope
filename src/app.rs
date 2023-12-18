@@ -88,20 +88,26 @@ impl App {
         if let (Some(x1), Some(x2)) = (self.p1.as_ref(), self.p2.as_ref()) {
             let tmp1 = x1.get_val().get("v").unwrap_or(&0.0).clone();
             let tmp2 = x2.get_val().get("v").unwrap_or(&0.0).clone();
+            let start_p: f64;
+            let end_p: f64;
             if tmp1 < tmp2 {
                 start = MeasurementType::Voltage(tmp1.clone());
                 end = MeasurementType::Voltage(tmp2.clone());
+                start_p = tmp1;
+                end_p = tmp2;
             } else {
                 start = MeasurementType::Voltage(tmp2.clone());
                 end = MeasurementType::Voltage(tmp1.clone());
+                start_p = tmp2;
+                end_p = tmp1;
             }
             if let Some(l) = self.line.as_ref() {
                 let _res1 = self
                     .plot
-                    .push((tmp2, l.get_corresponding_value(&start).unwrap()));
+                    .push((start_p, l.get_corresponding_value(&start).unwrap()));
                 let _res2 = self
                     .plot
-                    .push((tmp1, l.get_corresponding_value(&end).unwrap()));
+                    .push((end_p, l.get_corresponding_value(&end).unwrap()));
             }
         }
     }
